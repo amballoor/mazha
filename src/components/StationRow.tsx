@@ -31,7 +31,7 @@ export function StationRow({ label, rainfallMm, maxMm, onClick }: StationRowProp
         <div className="flex items-center gap-2 shrink-0">
           {isNone && (
             <div className="flex items-center gap-1">
-              <Sun size={16} style={{ color: 'var(--mw-text-muted)' }} />
+              <Sun size={16} style={{ color: 'var(--mw-status-no-rain)' }} />
               <span className="text-[16px] leading-none" style={{ color: 'var(--mw-text-muted)' }}>
                 No Rain
               </span>
