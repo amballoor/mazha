@@ -1,6 +1,8 @@
 import { MapPin } from 'lucide-react'
+import { useWeatherData } from '@/hooks/useWeatherData'
 
 export function HeaderCard() {
+  const { precipitationPct, tempMax } = useWeatherData()
   return (
     <div className="flex flex-col items-start w-full">
       {/* Top row: app name + location */}
@@ -28,7 +30,7 @@ export function HeaderCard() {
           </span>
           <div className="flex flex-col items-start">
             <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-              30%
+              {precipitationPct !== null ? `${precipitationPct}%` : '—'}
             </span>
             <span className="text-[14px] leading-none mt-0.5" style={{ color: 'var(--mw-text-muted)' }}>
               chance for rain
@@ -46,7 +48,7 @@ export function HeaderCard() {
           </span>
           <div className="flex flex-col items-start">
             <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-              29°
+              {tempMax !== null ? `${Math.round(tempMax)}°` : '—'}
             </span>
             <span className="text-[14px] leading-none mt-0.5" style={{ color: 'var(--mw-text-muted)' }}>
               temperature
