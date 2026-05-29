@@ -31,13 +31,11 @@ export function DateNav({ label, onPrev, onNext, disableNext, selectedDate, onDa
 
       {onDateSelect ? (
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <button
-              className="text-[16px] font-medium leading-none whitespace-nowrap px-1"
-              style={{ color: 'var(--mw-text-primary)' }}
-            >
-              {label}
-            </button>
+          <PopoverTrigger
+            className="text-[16px] font-medium leading-none whitespace-nowrap px-1 cursor-pointer"
+            style={{ color: 'var(--mw-text-primary)', background: 'none', border: 'none' }}
+          >
+            {label}
           </PopoverTrigger>
           <PopoverContent
             align="center"
