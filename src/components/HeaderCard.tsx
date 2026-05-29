@@ -45,7 +45,7 @@ export function HeaderCard() {
           <div className="flex items-end gap-2 shrink-0">
             <RainLottie />
             <div className="flex flex-col items-start">
-              <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
+              <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--mw-progress-fill)' }}>
                 {precipitationPct !== null ? `${precipitationPct}%` : '—'}
               </span>
               <span className="text-[14px] leading-none" style={{ color: 'var(--mw-text-muted)' }}>
@@ -66,7 +66,7 @@ export function HeaderCard() {
           <div className="flex items-end gap-2 shrink-0">
             <SunLottie />
             <div className="flex flex-col items-start">
-              <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
+              <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--mw-progress-fill)' }}>
                 {tempMax !== null ? `${Math.round(tempMax)}°` : '—'}
               </span>
               <span className="text-[14px] leading-none" style={{ color: 'var(--mw-text-muted)' }}>
