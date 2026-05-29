@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowDownNarrowWide } from 'lucide-react'
 import { useRainfallData } from '@/hooks/useRainfallData'
@@ -7,6 +7,8 @@ import { HeaderCard } from '@/components/HeaderCard'
 import { TabStrip } from '@/components/TabStrip'
 import { DateNav } from '@/components/DateNav'
 import { StationRow } from '@/components/StationRow'
+import { FilterChip } from '@/components/FilterChip'
+import type { RainfallRecord } from '@/types/rainfall'
 import {
   filterByDay,
   filterByDateRange,
@@ -16,6 +18,14 @@ import {
   formatDay,
   formatWeekRange,
 } from '@/lib/rainfallUtils'
+
+function getRainyDates(records: RainfallRecord[]): Set<string> {
+  const s = new Set<string>()
+  for (const r of records) {
+    if (r.rainfallMm > 0) s.add(startOfDay(r.timestamp).toISOString())
+  }
+  return s
+}
 
 function SkeletonRow() {
   return (
@@ -38,11 +48,13 @@ export default function Home() {
 
   const [tab, setTab] = useState<'day' | 'week'>('day')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [showRainOnly, setShowRainOnly] = useState(false)
 
   const today = startOfDay(new Date())
-  // Once data loads, default to the most recent date in the dataset
   const mostRecent = records.length > 0 ? getMostRecentDate(records) : today
   const displayDate = selectedDate ?? mostRecent
+
+  const rainyDates = useMemo(() => getRainyDates(records), [records])
 
   function prevDay() {
     setSelectedDate((d) => {
@@ -73,6 +85,30 @@ export default function Home() {
     })
   }
 
+  function prevRainyDay() {
+    setSelectedDate((d) => {
+      let c = new Date(d ?? displayDate)
+      for (let i = 0; i < 365; i++) {
+        c = new Date(c)
+        c.setDate(c.getDate() - 1)
+        if (rainyDates.has(startOfDay(c).toISOString())) return c
+      }
+      return d ?? displayDate
+    })
+  }
+  function nextRainyDay() {
+    setSelectedDate((d) => {
+      let c = new Date(d ?? displayDate)
+      for (let i = 0; i < 365; i++) {
+        c = new Date(c)
+        c.setDate(c.getDate() + 1)
+        if (c > today) return d ?? displayDate
+        if (rainyDates.has(startOfDay(c).toISOString())) return c
+      }
+      return d ?? displayDate
+    })
+  }
+
   const { start: weekStart, end: weekEnd } = getWeekRange(displayDate)
 
   const dateLabel =
@@ -80,12 +116,8 @@ export default function Home() {
       ? formatDay(displayDate)
       : formatWeekRange(weekStart, weekEnd)
 
-  const isNextDisabled =
-    tab === 'day'
-      ? displayDate >= today
-      : displayDate >= today
+  const isNextDisabled = displayDate >= today
 
-  // Compute rainfall mm per location for the selected period
   const locationValues = LOCATIONS.map((loc) => {
     let mm = 0
     if (tab === 'day') {
@@ -128,14 +160,23 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <DateNav
               label={dateLabel}
-              onPrev={tab === 'day' ? prevDay : prevWeek}
-              onNext={tab === 'day' ? nextDay : nextWeek}
+              onPrev={showRainOnly ? prevRainyDay : (tab === 'day' ? prevDay : prevWeek)}
+              onNext={showRainOnly ? nextRainyDay : (tab === 'day' ? nextDay : nextWeek)}
               disableNext={isNextDisabled}
               selectedDate={displayDate}
               onDateSelect={setSelectedDate}
               maxDate={today}
+              disabledDates={showRainOnly
+                ? (date) => !rainyDates.has(startOfDay(date).toISOString())
+                : undefined}
             />
-            <ArrowDownNarrowWide size={24} style={{ color: 'var(--mw-text-muted)' }} />
+            <div className="flex items-center gap-3">
+              <FilterChip
+                active={showRainOnly}
+                onToggle={() => setShowRainOnly((v) => !v)}
+              />
+              <ArrowDownNarrowWide size={24} style={{ color: 'var(--mw-text-muted)' }} />
+            </div>
           </div>
 
           <ul className="flex flex-col gap-2">

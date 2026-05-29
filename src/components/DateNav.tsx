@@ -11,9 +11,10 @@ type DateNavProps = {
   selectedDate?: Date
   onDateSelect?: (date: Date) => void
   maxDate?: Date
+  disabledDates?: (date: Date) => boolean
 }
 
-export function DateNav({ label, onPrev, onNext, disableNext, selectedDate, onDateSelect, maxDate }: DateNavProps) {
+export function DateNav({ label, onPrev, onNext, disableNext, selectedDate, onDateSelect, maxDate, disabledDates }: DateNavProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -56,8 +57,16 @@ export function DateNav({ label, onPrev, onNext, disableNext, selectedDate, onDa
                     setOpen(false)
                   }
                 }}
-                disabled={maxDate ? { after: maxDate } : undefined}
+                disabled={(date) =>
+                  (maxDate ? date > maxDate : false) ||
+                  (disabledDates ? disabledDates(date) : false)
+                }
                 defaultMonth={selectedDate}
+                className="[--cell-size:56px] p-4"
+                classNames={{
+                  caption_label: "text-base font-medium select-none",
+                  weekday: "flex-1 rounded-md text-base font-normal text-muted-foreground select-none",
+                }}
               />
             </div>
           </PopoverContent>
