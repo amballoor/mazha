@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Droplets } from 'lucide-react'
 import { useRainfallData } from '@/hooks/useRainfallData'
 import { LOCATIONS } from '@/data/locations'
 import { HeaderCard } from '@/components/HeaderCard'
@@ -197,6 +198,10 @@ export default function Home() {
                   />
                 ))}
           </ul>
+
+          <div className="flex justify-center mt-16 mb-4">
+            <Droplets size={40} style={{ color: 'var(--mw-progress-fill)' }} />
+          </div>
         </div>
       </div>
     </div>
