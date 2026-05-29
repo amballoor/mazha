@@ -131,6 +131,9 @@ export default function Home() {
               onPrev={tab === 'day' ? prevDay : prevWeek}
               onNext={tab === 'day' ? nextDay : nextWeek}
               disableNext={isNextDisabled}
+              selectedDate={displayDate}
+              onDateSelect={setSelectedDate}
+              maxDate={today}
             />
             <ArrowDownNarrowWide size={24} style={{ color: 'var(--mw-text-muted)' }} />
           </div>
