@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ArrowDownNarrowWide } from 'lucide-react'
 import { useRainfallData } from '@/hooks/useRainfallData'
 import { LOCATIONS } from '@/data/locations'
+import { HeaderCard } from '@/components/HeaderCard'
 import { TabStrip } from '@/components/TabStrip'
 import { DateNav } from '@/components/DateNav'
 import { StationRow } from '@/components/StationRow'
@@ -102,30 +104,35 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen px-5 pt-10 pb-6"
+      className="min-h-screen px-5 pt-5 pb-6"
       style={{ background: 'var(--color-background, white)' }}
     >
-      <h1
-        className="text-[26px] font-normal leading-none text-center mb-[30px]"
-        style={{ color: 'var(--mw-text-primary)' }}
-      >
-        Rain Tracker
-      </h1>
+      <HeaderCard />
+
+      {/* Section heading */}
+      <div className="flex items-center gap-2 w-full my-6">
+        <div className="flex-1 h-px" style={{ background: 'var(--mw-border)' }} />
+        <span
+          className="text-[14px] font-semibold leading-none shrink-0"
+          style={{ color: 'var(--mw-text-primary)' }}
+        >
+          Rainfall History
+        </span>
+        <div className="flex-1 h-px" style={{ background: 'var(--mw-border)' }} />
+      </div>
 
       <div className="flex flex-col gap-6">
         <TabStrip active={tab} onChange={setTab} />
 
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">
-            <span className="text-[18px] leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-              Locations
-            </span>
             <DateNav
               label={dateLabel}
               onPrev={tab === 'day' ? prevDay : prevWeek}
               onNext={tab === 'day' ? nextDay : nextWeek}
               disableNext={isNextDisabled}
             />
+            <ArrowDownNarrowWide size={24} style={{ color: 'var(--mw-text-muted)' }} />
           </div>
 
           <ul className="flex flex-col gap-2">
