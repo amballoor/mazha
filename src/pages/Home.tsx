@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowDownNarrowWide } from 'lucide-react'
 import { useRainfallData } from '@/hooks/useRainfallData'
 import { LOCATIONS } from '@/data/locations'
 import { HeaderCard } from '@/components/HeaderCard'
@@ -8,6 +7,7 @@ import { TabStrip } from '@/components/TabStrip'
 import { DateNav } from '@/components/DateNav'
 import { StationRow } from '@/components/StationRow'
 import { FilterChip } from '@/components/FilterChip'
+import { SortButton } from '@/components/SortButton'
 import type { RainfallRecord } from '@/types/rainfall'
 import {
   filterByDay,
@@ -49,6 +49,7 @@ export default function Home() {
   const [tab, setTab] = useState<'day' | 'week'>('day')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showRainOnly, setShowRainOnly] = useState(false)
+  const [sortByRain, setSortByRain] = useState(false)
 
   const today = startOfDay(new Date())
   const mostRecent = records.length > 0 ? getMostRecentDate(records) : today
@@ -132,6 +133,10 @@ export default function Home() {
     return { loc, mm }
   })
 
+  const displayedLocations = sortByRain
+    ? [...locationValues].sort((a, b) => b.mm - a.mm)
+    : locationValues
+
   const maxMm = Math.max(...locationValues.map((v) => v.mm), 1)
 
   return (
@@ -175,14 +180,14 @@ export default function Home() {
                 active={showRainOnly}
                 onToggle={() => setShowRainOnly((v) => !v)}
               />
-              <ArrowDownNarrowWide size={24} style={{ color: 'var(--mw-text-muted)' }} />
+              <SortButton active={sortByRain} onToggle={() => setSortByRain(v => !v)} />
             </div>
           </div>
 
           <ul className="flex flex-col gap-2">
             {isLoading
               ? LOCATIONS.map((loc) => <SkeletonRow key={loc.slug} />)
-              : locationValues.map(({ loc, mm }) => (
+              : displayedLocations.map(({ loc, mm }) => (
                   <StationRow
                     key={loc.slug}
                     label={loc.name}
