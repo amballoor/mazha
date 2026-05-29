@@ -4,9 +4,9 @@ import { useWeatherData } from '@/hooks/useWeatherData'
 export function HeaderCard() {
   const { precipitationPct, tempMax } = useWeatherData()
   return (
-    <div className="flex flex-col items-start w-full">
+    <div className="flex flex-col items-start w-full gap-[28px]">
       {/* Top row: app name + location */}
-      <div className="flex flex-col gap-2 items-center justify-center w-full px-4 py-[14px]">
+      <div className="flex flex-col gap-2 items-center justify-center w-full px-4 py-[14px] h-[85px]">
         <span className="text-[14px] leading-none" style={{ color: 'var(--mw-text-muted)' }}>
           Rain Tracker
         </span>
@@ -20,7 +20,7 @@ export function HeaderCard() {
 
       {/* Bottom row: stat tiles */}
       <div
-        className="flex items-stretch w-full rounded-lg overflow-hidden"
+        className="flex items-stretch w-full rounded-lg overflow-hidden h-[85px]"
         style={{ background: 'var(--mw-surface)', border: '1px solid var(--mw-border)' }}
       >
         {/* Left tile: rain chance */}
@@ -32,7 +32,7 @@ export function HeaderCard() {
             <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
               {precipitationPct !== null ? `${precipitationPct}%` : '—'}
             </span>
-            <span className="text-[14px] leading-none mt-0.5" style={{ color: 'var(--mw-text-muted)' }}>
+            <span className="text-[14px] leading-none" style={{ color: 'var(--mw-text-muted)' }}>
               chance for rain
             </span>
           </div>
@@ -50,7 +50,7 @@ export function HeaderCard() {
             <span className="text-[16px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
               {tempMax !== null ? `${Math.round(tempMax)}°` : '—'}
             </span>
-            <span className="text-[14px] leading-none mt-0.5" style={{ color: 'var(--mw-text-muted)' }}>
+            <span className="text-[14px] leading-none" style={{ color: 'var(--mw-text-muted)' }}>
               temperature
             </span>
           </div>
