@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
 import { FilterChip } from '@/components/FilterChip'
 
@@ -51,13 +51,14 @@ export function CalendarSheet({
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--mw-border)' }} />
 
-        {/* Calendar */}
+        {/* Calendar — font-medium on day buttons, outside days hidden, custom chevrons */}
         <div
-          className="flex justify-center"
+          className="flex justify-center [&_button]:font-medium"
           style={{ '--primary': '#4aa2d1', '--primary-foreground': '#ffffff' } as React.CSSProperties}
         >
           <Calendar
             mode="single"
+            showOutsideDays={false}
             selected={selectedDate}
             onSelect={(date) => {
               if (date) {
@@ -74,6 +75,14 @@ export function CalendarSheet({
             classNames={{
               caption_label: 'text-base font-medium select-none',
               weekday: 'flex-1 rounded-md text-base font-normal text-muted-foreground select-none',
+            }}
+            components={{
+              Chevron: ({ orientation }) => {
+                const Icon = orientation === 'left' ? ChevronLeft
+                  : orientation === 'right' ? ChevronRight
+                  : ChevronDown
+                return <Icon size={16} strokeWidth={1.5} />
+              },
             }}
           />
         </div>
