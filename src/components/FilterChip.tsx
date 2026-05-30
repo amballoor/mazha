@@ -39,7 +39,7 @@ export function FilterChip({ active, onToggle, className }: FilterChipProps) {
     <button
       aria-pressed={active}
       onClick={onToggle}
-      className={`flex items-center gap-2 h-[38px] px-[12px] rounded-lg shrink-0 transition-colors ${className ?? ''}`}
+      className={`flex items-center gap-2 h-[46px] px-5 rounded-lg shrink-0 transition-colors ${className ?? ''}`}
       style={
         active
           ? {
@@ -54,7 +54,7 @@ export function FilterChip({ active, onToggle, className }: FilterChipProps) {
             }
       }
     >
-      <span className="text-[14px] leading-none whitespace-nowrap">Show only rainy days</span>
+      <span className="text-[16px] leading-none whitespace-nowrap">Show only rainy days</span>
       <Toggle active={active} />
     </button>
   )

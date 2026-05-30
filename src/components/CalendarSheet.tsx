@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
@@ -24,6 +25,18 @@ export function CalendarSheet({
   showRainOnly,
   onToggleRainOnly,
 }: CalendarSheetProps) {
+  // Lock body scroll when sheet is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
   return createPortal(
     <div
       className="fixed inset-0 z-50"
@@ -51,7 +64,7 @@ export function CalendarSheet({
         {/* Drag handle */}
         <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--mw-border)' }} />
 
-        {/* Calendar — font-medium on day buttons, outside days hidden, custom chevrons */}
+        {/* Calendar */}
         <div
           className="flex justify-center [&_button]:font-medium"
           style={{ '--primary': '#4aa2d1', '--primary-foreground': '#ffffff' } as React.CSSProperties}
@@ -81,7 +94,7 @@ export function CalendarSheet({
                 const Icon = orientation === 'left' ? ChevronLeft
                   : orientation === 'right' ? ChevronRight
                   : ChevronDown
-                return <Icon size={16} strokeWidth={1.5} />
+                return <Icon size={32} strokeWidth={2} />
               },
             }}
           />
@@ -96,7 +109,7 @@ export function CalendarSheet({
           />
           <button
             onClick={onClose}
-            className="flex items-center gap-2 h-[38px] px-2 rounded-lg text-[14px] leading-none shrink-0 transition-colors"
+            className="flex items-center gap-2 h-[46px] px-3 py-2 rounded-lg text-[16px] leading-none shrink-0 transition-colors"
             style={{
               border: '1px solid var(--mw-status-heavy-rain)',
               color: 'var(--mw-status-heavy-rain)',
