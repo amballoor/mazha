@@ -1,8 +1,33 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
 import { FilterChip } from '@/components/FilterChip'
+
+function TablerChevron({ direction, size = 42, style }: {
+  direction: 'left' | 'right' | 'down'
+  size?: number
+  style?: React.CSSProperties
+}) {
+  const path =
+    direction === 'left'  ? 'M15 6l-6 6l6 6' :
+    direction === 'right' ? 'M9 6l6 6l-6 6'  :
+                            'M6 9l6 6l6-6'
+  return (
+    <svg
+      width={size} height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={style}
+    >
+      <path d={path} />
+    </svg>
+  )
+}
 
 const MIN_YEAR = 2020
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -129,12 +154,13 @@ export function CalendarSheet({
                       </button>
                     </div>
                   ),
-                  Chevron: ({ orientation }) => {
-                    const Icon = orientation === 'left' ? ChevronLeft
-                      : orientation === 'right' ? ChevronRight
-                      : ChevronDown
-                    return <Icon size={24} strokeWidth={1.5} style={{ color: 'var(--mw-progress-fill)' }} />
-                  },
+                  Chevron: ({ orientation }) => (
+                    <TablerChevron
+                      direction={orientation === 'left' ? 'left' : orientation === 'right' ? 'right' : 'down'}
+                      size={42}
+                      style={{ color: 'var(--mw-progress-fill)' }}
+                    />
+                  ),
                 }}
               />
             </div>
@@ -152,7 +178,7 @@ export function CalendarSheet({
                   aria-label="Previous year"
                   style={{ color: 'var(--mw-progress-fill)', opacity: viewYear <= MIN_YEAR ? 0.4 : 1 }}
                 >
-                  <ChevronLeft size={24} strokeWidth={1.5} />
+                  <TablerChevron direction="left" size={42} />
                 </button>
 
                 <button
@@ -170,7 +196,7 @@ export function CalendarSheet({
                   aria-label="Next year"
                   style={{ color: 'var(--mw-progress-fill)', opacity: viewYear >= today.getFullYear() ? 0.4 : 1 }}
                 >
-                  <ChevronRight size={24} strokeWidth={1.5} />
+                  <TablerChevron direction="right" size={42} />
                 </button>
               </div>
 

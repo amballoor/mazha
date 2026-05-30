@@ -1,14 +1,14 @@
 function Toggle({ active }: { active: boolean }) {
   return (
-    <div className="relative shrink-0" style={{ width: 32, height: 32 }}>
+    <div className="relative shrink-0 size-[46px]">
       {/* Track */}
       <div
         className="absolute rounded-full"
         style={{
-          width: 26.67,
-          height: 16,
-          left: 2.67,
-          top: 8,
+          width: 38,
+          height: 23,
+          left: 4,
+          top: 11.5,
           background: active ? 'var(--mw-progress-fill)' : 'var(--mw-text-muted)',
           transition: 'background 200ms ease',
         }}
@@ -17,10 +17,10 @@ function Toggle({ active }: { active: boolean }) {
       <div
         className="absolute rounded-full bg-white"
         style={{
-          width: 8.25,
-          height: 8.25,
-          left: active ? 18.18 : 6.55,
-          top: 11.88,
+          width: 12,
+          height: 12,
+          left: active ? 26 : 9.5,
+          top: 17,
           transition: 'left 200ms ease',
         }}
       />
@@ -45,7 +45,7 @@ export function FilterChip({ active, onToggle, className }: FilterChipProps) {
           ? {
               border: '1px solid var(--mw-progress-fill)',
               color: 'var(--mw-progress-fill)',
-              background: 'rgba(74,162,209,0.05)',
+              background: '#f9fcfd',
             }
           : {
               border: '1px solid var(--mw-progress-fill)',
