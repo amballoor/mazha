@@ -17,6 +17,7 @@ import {
   startOfDay,
   formatDay,
   formatWeekRange,
+  getRainfallStatus,
 } from '@/lib/rainfallUtils'
 
 function getRainyDates(records: RainfallRecord[]): Set<string> {
@@ -49,7 +50,7 @@ export default function Home() {
   const [tab, setTab] = useState<'day' | 'week'>('day')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showRainOnly, setShowRainOnly] = useState(false)
-  const [sortByRain, setSortByRain] = useState(false)
+  const [sortByRain, setSortByRain] = useState(true)
 
   const today = startOfDay(new Date())
   const mostRecent = records.length > 0 ? getMostRecentDate(records) : today
@@ -145,8 +146,20 @@ export default function Home() {
   const MAX_MM = 130
 
   const rankMap = useMemo(() => {
-    const sorted = [...locationValues].sort((a, b) => b.mm - a.mm)
-    return new Map(sorted.map((item, idx) => [item.loc.slug, idx + 1]))
+    const heavy = locationValues.filter(v => getRainfallStatus(v.mm) === 'heavy')
+    const nonHeavy = locationValues
+      .filter(v => getRainfallStatus(v.mm) !== 'heavy')
+      .sort((a, b) => b.mm - a.mm)
+    const map = new Map<string, number>()
+    if (heavy.length > 0) {
+      heavy.forEach(v => map.set(v.loc.slug, 1))
+      nonHeavy.forEach((v, idx) => map.set(v.loc.slug, idx + 2))
+    } else {
+      [...locationValues]
+        .sort((a, b) => b.mm - a.mm)
+        .forEach((v, idx) => map.set(v.loc.slug, idx + 1))
+    }
+    return map
   }, [locationValues])
 
   return (

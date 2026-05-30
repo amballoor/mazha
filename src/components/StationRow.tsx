@@ -21,7 +21,7 @@ export function StationRow({ label, rainfallMm, maxMm, rank, onClick }: StationR
   const isHeavy = status === 'heavy'
   const isNone = status === 'none'
 
-  const fillColor = rankToFill(rank)
+  const fillColor = isHeavy ? 'var(--mw-fill-700)' : rankToFill(rank)
 
   return (
     <li
