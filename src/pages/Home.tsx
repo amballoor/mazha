@@ -143,7 +143,7 @@ export default function Home() {
     ? [...locationValues].sort((a, b) => b.mm - a.mm)
     : locationValues
 
-  const MAX_MM = 130
+  const MAX_MM = tab === 'week' ? 350 : 130
 
   const rankMap = useMemo(() => {
     const heavy = locationValues.filter(v => getRainfallStatus(v.mm) === 'heavy')
