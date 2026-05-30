@@ -1,20 +1,27 @@
 import { CloudRain, Sun } from 'lucide-react'
 import { getRainfallStatus, getProgressPercent } from '@/lib/rainfallUtils'
 
+function rankToFill(rank?: number): string {
+  if (!rank || rank >= 7) return 'var(--mw-fill-100)'
+  const shade = (8 - rank) * 100 // rank 1→700, 2→600, …, 7→100
+  return `var(--mw-fill-${shade})`
+}
+
 type StationRowProps = {
   label: string
   rainfallMm: number
   maxMm: number
+  rank?: number
   onClick?: () => void
 }
 
-export function StationRow({ label, rainfallMm, maxMm, onClick }: StationRowProps) {
+export function StationRow({ label, rainfallMm, maxMm, rank, onClick }: StationRowProps) {
   const status = getRainfallStatus(rainfallMm)
   const fillPct = getProgressPercent(rainfallMm, maxMm)
   const isHeavy = status === 'heavy'
   const isNone = status === 'none'
 
-  const fillColor = isHeavy ? 'var(--mw-status-heavy-rain)' : 'var(--mw-progress-fill)'
+  const fillColor = rankToFill(rank)
 
   return (
     <li
@@ -39,8 +46,8 @@ export function StationRow({ label, rainfallMm, maxMm, onClick }: StationRowProp
           )}
           {isHeavy && (
             <div className="flex items-center gap-1">
-              <CloudRain size={16} style={{ color: 'var(--mw-status-heavy-rain)' }} />
-              <span className="text-[16px] leading-none" style={{ color: 'var(--mw-status-heavy-rain)' }}>
+              <CloudRain size={16} style={{ color: fillColor }} />
+              <span className="text-[16px] leading-none" style={{ color: fillColor }}>
                 Heavy Rain
               </span>
             </div>

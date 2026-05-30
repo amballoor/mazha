@@ -142,7 +142,12 @@ export default function Home() {
     ? [...locationValues].sort((a, b) => b.mm - a.mm)
     : locationValues
 
-  const maxMm = Math.max(...locationValues.map((v) => v.mm), 1)
+  const MAX_MM = 130
+
+  const rankMap = useMemo(() => {
+    const sorted = [...locationValues].sort((a, b) => b.mm - a.mm)
+    return new Map(sorted.map((item, idx) => [item.loc.slug, idx + 1]))
+  }, [locationValues])
 
   return (
     <div
@@ -196,7 +201,8 @@ export default function Home() {
                     key={loc.slug}
                     label={loc.name}
                     rainfallMm={mm}
-                    maxMm={maxMm}
+                    maxMm={MAX_MM}
+                    rank={rankMap.get(loc.slug)}
                     onClick={() => navigate(`/location/${loc.slug}`)}
                   />
                 ))}

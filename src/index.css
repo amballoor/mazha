@@ -55,6 +55,13 @@
     --mw-surface: #fafafa;
     --mw-progress-track: #ebebeb;
     --mw-progress-fill: #4aa2d1;
+    --mw-fill-700: #4aa2d1;
+    --mw-fill-600: #5dacd6;
+    --mw-fill-500: #71b6db;
+    --mw-fill-400: #84c0e0;
+    --mw-fill-300: #97cae4;
+    --mw-fill-200: #abd4e9;
+    --mw-fill-100: #bedeee;
     --mw-status-heavy-rain: #e82c2c;
     --mw-status-no-rain: #f59e0b;
     --mw-text-primary: #212121;
