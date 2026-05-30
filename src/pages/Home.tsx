@@ -7,7 +7,6 @@ import { HeaderCard } from '@/components/HeaderCard'
 import { TabStrip } from '@/components/TabStrip'
 import { DateNav } from '@/components/DateNav'
 import { StationRow } from '@/components/StationRow'
-import { FilterChip } from '@/components/FilterChip'
 import { SortButton } from '@/components/SortButton'
 import type { RainfallRecord } from '@/types/rainfall'
 import {
@@ -175,14 +174,10 @@ export default function Home() {
               disabledDates={showRainOnly
                 ? (date) => !rainyDates.has(startOfDay(date).toISOString())
                 : undefined}
+              showRainOnly={showRainOnly}
+              onToggleRainOnly={() => setShowRainOnly((v) => !v)}
             />
-            <div className="flex items-center gap-3">
-              <FilterChip
-                active={showRainOnly}
-                onToggle={() => setShowRainOnly((v) => !v)}
-              />
-              <SortButton active={sortByRain} onToggle={() => setSortByRain(v => !v)} />
-            </div>
+            <SortButton active={sortByRain} onToggle={() => setSortByRain(v => !v)} />
           </div>
 
           <ul className="flex flex-col gap-2">
