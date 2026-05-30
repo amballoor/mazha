@@ -119,6 +119,11 @@ export default function Home() {
 
   const isNextDisabled = displayDate >= today
 
+  const hasPrevRainyDay = showRainOnly
+    ? [...rainyDates].some(d => new Date(d) < displayDate)
+    : true
+  const isPrevDisabled = showRainOnly && !hasPrevRainyDay
+
   const locationValues = LOCATIONS.map((loc) => {
     let mm = 0
     if (tab === 'day') {
@@ -141,7 +146,7 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen px-5 pt-5 pb-6"
+      className="min-h-screen px-5 py-[28px]"
       style={{ background: 'var(--color-background, white)' }}
     >
       <HeaderCard />
@@ -162,21 +167,24 @@ export default function Home() {
         <TabStrip active={tab} onChange={setTab} />
 
         <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <DateNav
-              label={dateLabel}
-              onPrev={showRainOnly ? prevRainyDay : (tab === 'day' ? prevDay : prevWeek)}
-              onNext={showRainOnly ? nextRainyDay : (tab === 'day' ? nextDay : nextWeek)}
-              disableNext={isNextDisabled}
-              selectedDate={displayDate}
-              onDateSelect={setSelectedDate}
-              maxDate={today}
-              disabledDates={showRainOnly
-                ? (date) => !rainyDates.has(startOfDay(date).toISOString())
-                : undefined}
-              showRainOnly={showRainOnly}
-              onToggleRainOnly={() => setShowRainOnly((v) => !v)}
-            />
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <DateNav
+                label={dateLabel}
+                onPrev={showRainOnly ? prevRainyDay : (tab === 'day' ? prevDay : prevWeek)}
+                onNext={showRainOnly ? nextRainyDay : (tab === 'day' ? nextDay : nextWeek)}
+                disableNext={isNextDisabled}
+                disablePrev={isPrevDisabled}
+                selectedDate={displayDate}
+                onDateSelect={setSelectedDate}
+                maxDate={today}
+                disabledDates={showRainOnly
+                  ? (date) => !rainyDates.has(startOfDay(date).toISOString())
+                  : undefined}
+                showRainOnly={showRainOnly}
+                onToggleRainOnly={() => setShowRainOnly((v) => !v)}
+              />
+            </div>
             <SortButton active={sortByRain} onToggle={() => setSortByRain(v => !v)} />
           </div>
 

@@ -69,6 +69,26 @@ Three MCP servers are configured for this project:
 - Implement in React + TypeScript + Tailwind, matching design 1:1
 - Use only ShadCN primitives — no custom UI unless ShadCN has no equivalent
 
+### Mandatory Figma Component Inspection (before every implementation or update)
+
+Before writing any code for a component, always use `use_figma` to inspect ALL of the following — never assume specs are unchanged from a prior session:
+
+1. **Every variant/state** — Default, Selected, Disabled, Hover, Error, etc. Inspect each one individually via the component set children.
+2. **All design tokens** — Check `boundVariables` on fills, strokes, and effects to find the exact token name (e.g. `color/progress/fill`, `color/text/muted`). Never hardcode hex values; use the mapped `--mw-*` CSS variable.
+3. **Exact dimensions** — width, height, padding (all four sides), gap/itemSpacing, corner radius, stroke weight.
+4. **Text content** — exact label string (e.g. `"Sort"` not `"Sort by highest to lowest"`), font size, font weight, color token.
+5. **Icon color per state** — icon fill may differ between Default and Selected.
+6. **Layout** — `layoutMode` (HORIZONTAL/VERTICAL), `primaryAxisSizingMode`, `counterAxisSizingMode`.
+
+Use this script pattern to inspect a component set:
+```js
+const node = await figma.getNodeByIdAsync('NODE_ID');
+// For component sets: iterate node.children for each variant
+// For each variant: check fills, strokes, children text/icon nodes
+```
+
+Take a `get_screenshot` after inspection to visually verify the expected design before coding.
+
 ---
 
 ## 12 Monitoring Locations
