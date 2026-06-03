@@ -8,6 +8,7 @@ import { TabStrip } from '@/components/TabStrip'
 import { DateNav } from '@/components/DateNav'
 import { StationRow } from '@/components/StationRow'
 import { SortButton } from '@/components/SortButton'
+import { ShareButton } from '@/components/ShareButton'
 import type { RainfallRecord } from '@/types/rainfall'
 import {
   filterByDay,
@@ -220,6 +221,16 @@ export default function Home() {
                   />
                 ))}
           </ul>
+
+          {tab === 'day' && (
+            <ShareButton
+              entries={locationValues.map(({ loc, mm }) => ({
+                location: loc.name,
+                rainfallMm: mm,
+              }))}
+              date={displayDate}
+            />
+          )}
 
           <div className="flex justify-center mt-16 mb-4">
             <Droplets size={40} style={{ color: 'var(--mw-progress-fill)' }} />
