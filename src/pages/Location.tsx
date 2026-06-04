@@ -112,6 +112,7 @@ export default function LocationPage() {
 
   const rainyDaySet = new Set(allHistory.map(r => startOfDay(r.date).toISOString()))
   const dataByDate = new Map(allHistory.map(r => [startOfDay(r.date).toISOString(), r.mm]))
+  const calendarScaleMax = maxMm + 10
 
   function prevMonth() {
     setSelectedMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))
@@ -239,14 +240,16 @@ export default function LocationPage() {
         {/* ── MONTH VIEW ── */}
         {view === 'month' && (
           <>
-            {/* Dismiss tooltip on outside tap */}
             <div onClick={() => setActiveTip(null)}>
-              <div className="rounded-lg p-3 flex flex-col gap-3" style={{ background: 'var(--mw-surface)' }}>
-                {/* Day headers */}
-                <div className="grid grid-cols-7 gap-2 opacity-70">
+              <div
+                className="rounded-lg flex flex-col gap-3"
+                style={{ background: 'var(--mw-surface)', padding: 10 }}
+              >
+                {/* Day headers — Su Mo Tu We Th Fr Sa */}
+                <div className="flex gap-2 opacity-70">
                   {DAY_LABELS.map(d => (
-                    <div key={d} className="flex items-center justify-center py-1">
-                      <span className="text-[12px] font-medium leading-none" style={{ color: 'var(--mw-text-muted)' }}>
+                    <div key={d} className="flex-1 flex items-center justify-center" style={{ padding: 4 }}>
+                      <span className="text-[12px] font-normal leading-none" style={{ color: 'var(--mw-text-muted)' }}>
                         {d}
                       </span>
                     </div>
@@ -267,38 +270,50 @@ export default function LocationPage() {
                   while (last.length < 7) last.push(null)
 
                   return rows.map((row, ri) => (
-                    <div key={ri} className="grid grid-cols-7 gap-2">
+                    <div key={ri} className="flex gap-2">
                       {row.map((day, ci) => {
-                        if (!day) return <div key={ci} />
+                        if (!day) return <div key={ci} className="flex-1" style={{ height: 38 }} />
                         const iso = startOfDay(day).toISOString()
                         const mm = dataByDate.get(iso) ?? 0
                         const hasData = rainyDaySet.has(iso)
-                        const status = getRainfallStatus(mm)
-                        const fillColor = getCalendarFillColor(status)
+                        const fillWidthPct = hasData ? (mm / calendarScaleMax * 100) : 0
+                        const fillColor = getCalendarFillColor(getRainfallStatus(mm))
                         const tipOpen = activeTip === iso
                         return (
                           <div
                             key={ci}
-                            className="relative flex items-center justify-center py-[6px] rounded-[4px] overflow-visible"
-                            style={{ border: '1px solid var(--mw-border)' }}
+                            className="flex-1 relative flex items-center justify-center overflow-visible"
+                            style={{
+                              height: 38,
+                              padding: 4,
+                              border: '1px solid var(--mw-border)',
+                              borderRadius: 4,
+                            }}
                             onClick={hasData ? (e) => { e.stopPropagation(); setActiveTip(tipOpen ? null : iso) } : undefined}
                           >
                             {hasData && (
                               <span
-                                className="absolute top-0 left-0 bottom-0 rounded-tl-[4px] rounded-bl-[4px]"
-                                style={{ width: 3, background: fillColor }}
+                                className="absolute rounded-tl-[4px] rounded-bl-[4px]"
+                                style={{
+                                  top: -1, left: -1, bottom: -1,
+                                  width: `${fillWidthPct.toFixed(1)}%`,
+                                  background: fillColor,
+                                }}
                               />
                             )}
                             <span
-                              className="text-[12px] font-medium leading-none"
-                              style={{ color: hasData ? 'var(--mw-text-primary)' : 'var(--mw-text-muted)' }}
+                              className="relative text-[12px] font-normal leading-none"
+                              style={{
+                                color: hasData ? 'var(--mw-text-primary)' : 'var(--mw-text-muted)',
+                                zIndex: 1,
+                              }}
                             >
                               {String(day.getDate()).padStart(2, '0')}
                             </span>
                             {tipOpen && (
                               <div
                                 className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+4px)] z-10
-                                            px-2 py-1 rounded-md text-white text-[12px] font-medium
+                                            px-2 py-1 rounded-md text-white text-[12px] font-normal
                                             whitespace-nowrap pointer-events-none"
                                 style={{ background: 'var(--mw-text-primary)' }}
                               >

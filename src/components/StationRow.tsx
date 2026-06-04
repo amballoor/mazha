@@ -1,3 +1,4 @@
+import { forwardRef } from 'react'
 import { Sun } from 'lucide-react'
 import type { RainfallStatus } from '@/types/rainfall'
 import { getRainfallStatus, getStatusLabel, getProgressPercent } from '@/lib/rainfallUtils'
@@ -30,7 +31,7 @@ type StationRowProps = {
   onClick?: () => void
 }
 
-export function StationRow({ label, rainfallMm, maxMm, blueShade, onClick }: StationRowProps) {
+export const StationRow = forwardRef<HTMLLIElement, StationRowProps>(function StationRow({ label, rainfallMm, maxMm, blueShade, onClick }, ref) {
   const status = getRainfallStatus(rainfallMm)
   const fillPct = getProgressPercent(rainfallMm, maxMm)
   const isNone = status === 'none'
@@ -41,6 +42,7 @@ export function StationRow({ label, rainfallMm, maxMm, blueShade, onClick }: Sta
 
   return (
     <li
+      ref={ref}
       className="flex flex-col gap-[6px] h-16 w-full px-3 py-[10px] rounded-lg shrink-0"
       style={{ background: 'var(--mw-surface)' }}
       onClick={onClick}
@@ -102,4 +104,4 @@ export function StationRow({ label, rainfallMm, maxMm, blueShade, onClick }: Sta
       </div>
     </li>
   )
-}
+})

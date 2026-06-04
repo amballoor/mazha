@@ -91,6 +91,8 @@ Take a `get_screenshot` after inspection to visually verify the expected design 
 
 7. **Always inspect every atomic inner component individually** — never assume specs from a parent or wrapper component. A text node inside a card that belongs to a named inner component (e.g. a StatusRow inside a StationRow) must be fetched via `get_design_context` on its own node ID. Parent-level inspection alone will produce wrong font weight, size, color, or spacing. If a component contains sub-components, call `get_design_context` on each sub-component node separately.
 
+8. **Verify ALL dimension specs before writing a single line of code** — height, padding (all four sides independently), row/column gaps, border radius, font weight, font size, overflow. Never estimate or reuse values from a related component. Always read them from `get_design_context` on the specific atomic node. Common mistakes: cell height (often explicit, not derived from padding), gap between rows vs between cells (can differ), font weight (Regular vs Medium look similar in screenshots but differ in code).
+
 ---
 
 ## 12 Monitoring Locations
