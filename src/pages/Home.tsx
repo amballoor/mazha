@@ -223,7 +223,7 @@ export default function Home() {
                     rainfallMm={mm}
                     maxMm={MAX_MM}
                     blueShade={blueShadeMap.get(loc.slug)}
-                    onClick={() => navigate(`/location/${loc.slug}`)}
+                    onClick={() => navigate(`/location/${loc.slug}`, { state: { date: displayDate.toISOString() } })}
                   />
                 ))}
           </ul>
