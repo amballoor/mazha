@@ -89,6 +89,8 @@ const node = await figma.getNodeByIdAsync('NODE_ID');
 
 Take a `get_screenshot` after inspection to visually verify the expected design before coding.
 
+7. **Always inspect every atomic inner component individually** — never assume specs from a parent or wrapper component. A text node inside a card that belongs to a named inner component (e.g. a StatusRow inside a StationRow) must be fetched via `get_design_context` on its own node ID. Parent-level inspection alone will produce wrong font weight, size, color, or spacing. If a component contains sub-components, call `get_design_context` on each sub-component node separately.
+
 ---
 
 ## 12 Monitoring Locations
@@ -225,6 +227,14 @@ npm run build     # Production build → dist/
 npm run preview   # Preview production build locally
 npm run deploy    # Deploy to GitHub Pages (gh-pages -d dist)
 ```
+
+## Workflow Rules (MANDATORY — never skip)
+
+- **Never run `npm run deploy` or `git commit` or `git push` without explicit user confirmation.**
+- After implementing changes: update the code only, then stop.
+- The user will test locally (`npm run dev`), commit via VS Code, and explicitly say "deploy" when ready.
+- Only run `npm run build` to verify zero TypeScript/build errors — never as a step toward deploying.
+- The only exception: if the user says "deploy" directly, that is explicit confirmation.
 
 **Vite config for GitHub Pages** — set `base` to match the repo name:
 ```ts

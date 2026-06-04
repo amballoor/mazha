@@ -19,7 +19,6 @@ import {
   startOfDay,
   formatDay,
   formatWeekRange,
-  getRainfallStatus,
 } from '@/lib/rainfallUtils'
 
 function getRainyDates(records: RainfallRecord[]): Set<string> {
@@ -149,22 +148,6 @@ export default function Home() {
 
   const MAX_MM = tab === 'week' ? 350 : 130
 
-  const rankMap = useMemo(() => {
-    const heavy = locationValues.filter(v => getRainfallStatus(v.mm) === 'heavy')
-    const nonHeavy = locationValues
-      .filter(v => getRainfallStatus(v.mm) !== 'heavy')
-      .sort((a, b) => b.mm - a.mm)
-    const map = new Map<string, number>()
-    if (heavy.length > 0) {
-      heavy.forEach(v => map.set(v.loc.slug, 1))
-      nonHeavy.forEach((v, idx) => map.set(v.loc.slug, idx + 2))
-    } else {
-      [...locationValues]
-        .sort((a, b) => b.mm - a.mm)
-        .forEach((v, idx) => map.set(v.loc.slug, idx + 1))
-    }
-    return map
-  }, [locationValues])
 
   return (
     <div
@@ -225,7 +208,6 @@ export default function Home() {
                     label={loc.name}
                     rainfallMm={mm}
                     maxMm={MAX_MM}
-                    rank={rankMap.get(loc.slug)}
                     onClick={() => navigate(`/location/${loc.slug}`)}
                   />
                 ))}

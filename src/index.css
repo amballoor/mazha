@@ -62,8 +62,10 @@
     --mw-fill-300: #97cae4;
     --mw-fill-200: #abd4e9;
     --mw-fill-100: #bedeee;
-    --mw-status-heavy-rain: #e82c2c;
     --mw-status-no-rain: #f59e0b;
+    --mw-alert-yellow: #ffc107;
+    --mw-alert-orange: #ff6d00;
+    --mw-alert-red:    #df1f1f;
     --mw-text-primary: #212121;
     --mw-text-muted: #8a8a8a;
     --mw-border: #e5e5e8;

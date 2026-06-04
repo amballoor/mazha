@@ -61,17 +61,14 @@ export function SortSheet({ open, onClose, value, onSelect }: SortSheetProps) {
         </div>
 
         {/* Options */}
-        {OPTIONS.map((opt) => {
+        {OPTIONS.map((opt, i) => {
           const selected = opt.value === value
           return (
             <button
               key={opt.value}
               onClick={() => onSelect(opt.value)}
               className="flex items-center justify-between w-full px-5"
-              style={{
-                height: '56px',
-                borderBottom: '1px solid var(--mw-border)',
-              }}
+              style={{ paddingTop: i === 0 ? 28 : 20, paddingBottom: 20 }}
             >
               <span
                 className="text-[18px] leading-none"

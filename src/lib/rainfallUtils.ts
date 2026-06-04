@@ -1,16 +1,18 @@
 import type { RainfallRecord, RainfallStatus } from '@/types/rainfall'
 
-// IMD 24-hour rainfall classification
 export function getRainfallStatus(mm: number): RainfallStatus {
-  if (mm === 0) return 'none'
-  if (mm < 15.6) return 'light'
-  if (mm < 64.5) return 'moderate'
-  return 'heavy'
+  if (mm === 0)   return 'none'
+  if (mm <= 40)   return 'blue'
+  if (mm <= 65)   return 'yellow'
+  if (mm <= 100)  return 'orange'
+  return 'red'
 }
 
 export function getStatusLabel(status: RainfallStatus): string {
-  if (status === 'none') return 'No Rain'
-  if (status === 'heavy') return 'Heavy Rain'
+  if (status === 'none')   return 'No Rain'
+  if (status === 'yellow') return 'Yellow Alert'
+  if (status === 'orange') return 'Orange Alert'
+  if (status === 'red')    return 'Red Alert'
   return ''
 }
 
