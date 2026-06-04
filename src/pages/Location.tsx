@@ -173,23 +173,38 @@ export default function LocationPage() {
             />
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {/* View toggle — blue border, padding-driven width */}
             <button
               onClick={() => setView(v => v === 'list' ? 'month' : 'list')}
-              className="flex items-center justify-center h-[42px] w-[42px] rounded-lg"
-              style={{ background: '#f9fcfd', border: '1px solid var(--mw-text-muted)' }}
+              className="flex items-center justify-center h-[42px] rounded-lg"
+              style={{ background: '#f9fcfd', border: '1px solid var(--mw-progress-fill)', paddingLeft: 12, paddingRight: 12 }}
               aria-label={view === 'list' ? 'Switch to month view' : 'Switch to list view'}
             >
               {view === 'list'
-                ? <CalendarDays size={24} style={{ color: 'var(--mw-text-muted)' }} />
-                : <List size={24} style={{ color: 'var(--mw-text-muted)' }} />
+                ? <CalendarDays size={24} style={{ color: 'var(--mw-progress-fill)' }} />
+                : <List size={24} style={{ color: 'var(--mw-progress-fill)' }} />
               }
             </button>
+
+            {/* Sort — active in list, disabled in month */}
             <button
-              className="flex items-center justify-center h-[42px] w-[42px] rounded-lg"
-              style={{ background: '#f9fcfd', border: '1px solid var(--mw-progress-fill)' }}
+              className="flex items-center justify-center h-[42px] rounded-lg"
+              style={{
+                background: '#f9fcfd',
+                border: `1px solid ${view === 'list' ? 'var(--mw-progress-fill)' : 'var(--mw-text-muted)'}`,
+                paddingLeft: 12,
+                paddingRight: 12,
+                opacity: view === 'month' ? 0.5 : 1,
+                pointerEvents: view === 'month' ? 'none' : 'auto',
+              }}
+              disabled={view === 'month'}
               aria-label="Sort"
+              aria-disabled={view === 'month'}
             >
-              <ArrowUpDown size={24} style={{ color: 'var(--mw-progress-fill)' }} />
+              <ArrowUpDown
+                size={24}
+                style={{ color: view === 'list' ? 'var(--mw-progress-fill)' : 'var(--mw-text-muted)' }}
+              />
             </button>
           </div>
         </div>
