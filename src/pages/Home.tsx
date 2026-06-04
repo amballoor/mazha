@@ -148,6 +148,20 @@ export default function Home() {
 
   const MAX_MM = tab === 'week' ? 350 : 130
 
+  const blueShadeMap = useMemo(() => {
+    const SHADES = [
+      'var(--mw-fill-700)', 'var(--mw-fill-600)', 'var(--mw-fill-500)',
+      'var(--mw-fill-400)', 'var(--mw-fill-300)', 'var(--mw-fill-200)',
+      'var(--mw-fill-100)',
+    ]
+    const blues = locationValues
+      .filter(v => v.mm > 0 && v.mm <= 40)
+      .sort((a, b) => b.mm - a.mm)
+    const map = new Map<string, string>()
+    blues.forEach((v, i) => map.set(v.loc.slug, SHADES[Math.min(i, SHADES.length - 1)]))
+    return map
+  }, [locationValues])
+
 
   return (
     <div
@@ -208,6 +222,7 @@ export default function Home() {
                     label={loc.name}
                     rainfallMm={mm}
                     maxMm={MAX_MM}
+                    blueShade={blueShadeMap.get(loc.slug)}
                     onClick={() => navigate(`/location/${loc.slug}`)}
                   />
                 ))}

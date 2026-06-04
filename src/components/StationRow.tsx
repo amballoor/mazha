@@ -26,16 +26,18 @@ type StationRowProps = {
   label: string
   rainfallMm: number
   maxMm: number
+  blueShade?: string
   onClick?: () => void
 }
 
-export function StationRow({ label, rainfallMm, maxMm, onClick }: StationRowProps) {
+export function StationRow({ label, rainfallMm, maxMm, blueShade, onClick }: StationRowProps) {
   const status = getRainfallStatus(rainfallMm)
   const fillPct = getProgressPercent(rainfallMm, maxMm)
   const isNone = status === 'none'
   const isAlert = status === 'yellow' || status === 'orange' || status === 'red'
   const alertDot = getAlertDotColor(status)
   const statusLabel = getStatusLabel(status)
+  const barBg = (status === 'blue' && blueShade) ? blueShade : getBarStyle(status)
 
   return (
     <li
@@ -94,7 +96,7 @@ export function StationRow({ label, rainfallMm, maxMm, onClick }: StationRowProp
         {!isNone && fillPct > 0 && (
           <div
             className="absolute left-0 top-0 h-[6px] rounded-[3px]"
-            style={{ width: `${fillPct}%`, background: getBarStyle(status) }}
+            style={{ width: `${fillPct}%`, background: barBg }}
           />
         )}
       </div>
