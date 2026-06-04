@@ -7,3 +7,5 @@ export type RainfallRecord = {
 export type TimeRange = 'day' | 'week' | 'month'
 
 export type RainfallStatus = 'none' | 'light' | 'moderate' | 'heavy'
+
+export type SortMode = 'high-to-low' | 'low-to-high' | 'alpha'

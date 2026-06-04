@@ -8,8 +8,9 @@ import { TabStrip } from '@/components/TabStrip'
 import { DateNav } from '@/components/DateNav'
 import { StationRow } from '@/components/StationRow'
 import { SortButton } from '@/components/SortButton'
+import { SortSheet } from '@/components/SortSheet'
 import { ShareButton } from '@/components/ShareButton'
-import type { RainfallRecord } from '@/types/rainfall'
+import type { RainfallRecord, SortMode } from '@/types/rainfall'
 import {
   filterByDay,
   filterByDateRange,
@@ -46,12 +47,13 @@ function SkeletonRow() {
 
 export default function Home() {
   const navigate = useNavigate()
-  const { data: records = [], isLoading } = useRainfallData()
+  const { data: records = [], isLoading, isError } = useRainfallData()
 
   const [tab, setTab] = useState<'day' | 'week'>('day')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showRainOnly, setShowRainOnly] = useState(false)
-  const [sortByRain, setSortByRain] = useState(true)
+  const [sortMode, setSortMode] = useState<SortMode>('high-to-low')
+  const [sortSheetOpen, setSortSheetOpen] = useState(false)
 
   const today = startOfDay(new Date())
   const mostRecent = records.length > 0 ? getMostRecentDate(records) : today
@@ -140,9 +142,10 @@ export default function Home() {
     return { loc, mm }
   })
 
-  const displayedLocations = sortByRain
-    ? [...locationValues].sort((a, b) => b.mm - a.mm)
-    : locationValues
+  const displayedLocations =
+    sortMode === 'high-to-low' ? [...locationValues].sort((a, b) => b.mm - a.mm)
+    : sortMode === 'low-to-high' ? [...locationValues].sort((a, b) => a.mm - b.mm)
+    : [...locationValues].sort((a, b) => a.loc.name.localeCompare(b.loc.name))
 
   const MAX_MM = tab === 'week' ? 350 : 130
 
@@ -204,8 +207,14 @@ export default function Home() {
                 onToggleRainOnly={() => setShowRainOnly((v) => !v)}
               />
             </div>
-            <SortButton active={sortByRain} onToggle={() => setSortByRain(v => !v)} />
+            <SortButton onClick={() => setSortSheetOpen(true)} />
           </div>
+
+          {isError && (
+            <p className="text-center text-sm py-3 px-4 rounded-lg" style={{ background: '#fff3f3', color: '#e82c2c' }}>
+              Could not load rainfall data. Check your internet connection and try refreshing.
+            </p>
+          )}
 
           <ul className="flex flex-col gap-2">
             {isLoading
@@ -237,6 +246,13 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <SortSheet
+        open={sortSheetOpen}
+        onClose={() => setSortSheetOpen(false)}
+        value={sortMode}
+        onSelect={(mode) => { setSortMode(mode); setSortSheetOpen(false) }}
+      />
     </div>
   )
 }
