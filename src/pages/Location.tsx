@@ -48,7 +48,7 @@ function getDaysInMonth(year: number, month: number): Date[] {
 export default function LocationPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
-  const routerState = (useRouterLocation().state as { date?: string } | null)
+  const routerState = (useRouterLocation().state as { date?: string; tab?: string; weekStart?: string; weekEnd?: string } | null)
   const location = getLocationBySlug(slug ?? '')
   const { data: records = [] } = useRainfallData()
 
@@ -64,10 +64,24 @@ export default function LocationPage() {
   )
   const [visibleDate, setVisibleDate] = useState<Date>(selectedDate)
   const [cardPhase, setCardPhase] = useState<'idle' | 'leaving' | 'entering'>('idle')
+  const [isWeekMode, setIsWeekMode] = useState(() => routerState?.tab === 'week')
+  const [weekModeStart] = useState<Date | null>(() =>
+    routerState?.weekStart ? new Date(routerState.weekStart) : null
+  )
+  const [weekModeEnd] = useState<Date | null>(() =>
+    routerState?.weekEnd ? new Date(routerState.weekEnd) : null
+  )
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const heroRef = useRef<HTMLDivElement>(null)
+
+  // Save tab context for back-navigation restoration in Home
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('mazha_home_tab', routerState?.tab === 'week' ? 'week' : 'day')
+    } catch {}
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -108,8 +122,12 @@ export default function LocationPage() {
   // Header card stats — computed from visibleDate (trails selectedDate during animation)
   const selectedDayMm = sumForLocation(records, location.name, visibleDate, visibleDate)
   const { start: weekStart, end: weekEnd } = getCalendarWeekRange(visibleDate)
-  const weekMm = sumForLocation(records, location.name, weekStart, weekEnd)
-  const alertStatus = getRainfallStatus(selectedDayMm)
+  const weekMm = (isWeekMode && weekModeStart && weekModeEnd)
+    ? sumForLocation(records, location.name, weekModeStart, weekModeEnd)
+    : sumForLocation(records, location.name, weekStart, weekEnd)
+  const alertStatus = isWeekMode
+    ? getRainfallStatus(weekMm, 'week')
+    : getRainfallStatus(selectedDayMm)
 
   const allHistory = groupByDate(records, location.name).filter(row =>
     row.date.getFullYear() === selectedMonth.getFullYear() &&
@@ -155,6 +173,7 @@ export default function LocationPage() {
   function handleCardAnimEnd() {
     if (cardPhase === 'leaving') {
       setVisibleDate(selectedDate)
+      setIsWeekMode(false)
       setCardPhase('entering')
     } else {
       setCardPhase('idle')
@@ -165,6 +184,7 @@ export default function LocationPage() {
     const d = startOfDay(date)
     setSelectedDate(d)
     setSelectedMonth(new Date(d.getFullYear(), d.getMonth(), 1))
+    try { sessionStorage.setItem('mazha_home_tab', 'day') } catch {}
     window.scrollTo({ top: 0, behavior: 'smooth' })
 
     observerRef.current?.disconnect()
@@ -278,6 +298,9 @@ export default function LocationPage() {
             cardRef={cardRef}
             onAnimationEnd={handleCardAnimEnd}
             cardPhase={cardPhase}
+            weekMode={isWeekMode}
+            weekRangeStart={weekModeStart ?? undefined}
+            weekRangeEnd={weekModeEnd ?? undefined}
           />
         </div>
 

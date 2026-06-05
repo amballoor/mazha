@@ -1,7 +1,7 @@
 import type { CSSProperties, Ref } from 'react'
 import { CloudRainWind, BarChartHorizontal, Sun } from 'lucide-react'
 import type { RainfallStatus } from '@/types/rainfall'
-import { formatDay } from '@/lib/rainfallUtils'
+import { formatDay, formatWeekRange } from '@/lib/rainfallUtils'
 
 // spacing: xs=4px gap-1, md=12px gap-3, 3xl=28px gap-7, 2xl=24px p-6
 // SVG embedded directly without encodeURIComponent — %23 is already pre-encoded for #
@@ -48,16 +48,24 @@ type Props = {
   cardRef: Ref<HTMLDivElement>
   onAnimationEnd: () => void
   cardPhase: 'idle' | 'leaving' | 'entering'
+  weekMode?: boolean
+  weekRangeStart?: Date
+  weekRangeEnd?: Date
 }
 
 export function SelectedDateCard({
   date, rainfallMm, weekMm, alertStatus, cardRef, onAnimationEnd, cardPhase,
+  weekMode = false, weekRangeStart, weekRangeEnd,
 }: Props) {
   const isAlert  = alertStatus === 'yellow' || alertStatus === 'orange' || alertStatus === 'red'
   // isNoRain = today AND the entire week have 0mm → "week without rain" variant (sun icon)
   const isNoRain = alertStatus === 'none' && weekMm === 0
   const alertColor = getAlertColor(alertStatus)
   const alertLabel = getAlertLabel(alertStatus)
+
+  const dateLabel = weekMode && weekRangeStart && weekRangeEnd
+    ? formatWeekRange(weekRangeStart, weekRangeEnd)
+    : formatDay(date)
 
   // Mazha/Label/Stat: Geist Medium 18px lh=100%
   const datePill = (
@@ -69,7 +77,7 @@ export function SelectedDateCard({
         className="text-[18px] font-medium leading-none whitespace-nowrap"
         style={{ color: 'var(--mw-text-primary)' }}
       >
-        {formatDay(date)}
+        {dateLabel}
       </span>
     </div>
   )
@@ -135,19 +143,21 @@ export function SelectedDateCard({
 
       {/* Stats row — spacing/3xl=28px between blocks, spacing/md=12px icon-to-text (gap-3) */}
       <div className="flex gap-7 items-start overflow-hidden w-full">
-        <div className="flex items-end gap-3 shrink-0">
-          <CloudRainWind size={38} strokeWidth={1} style={{ color: 'var(--mw-text-muted)', flexShrink: 0 }} />
-          <div className="flex flex-col gap-1">
-            {/* Mazha/Body/Default: Geist Regular 16px lh=100% */}
-            <span className="text-[16px] font-normal leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
-              Rainfall
-            </span>
-            {/* Mazha/Label/Station: Geist Regular 18px lh=100% */}
-            <span className="text-[18px] font-normal leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-              {rainfallMm.toFixed(1)} mm
-            </span>
+        {!weekMode && (
+          <div className="flex items-end gap-3 shrink-0">
+            <CloudRainWind size={38} strokeWidth={1} style={{ color: 'var(--mw-text-muted)', flexShrink: 0 }} />
+            <div className="flex flex-col gap-1">
+              {/* Mazha/Body/Default: Geist Regular 16px lh=100% */}
+              <span className="text-[16px] font-normal leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
+                Rainfall
+              </span>
+              {/* Mazha/Label/Station: Geist Regular 18px lh=100% */}
+              <span className="text-[18px] font-normal leading-none" style={{ color: 'var(--mw-text-primary)' }}>
+                {rainfallMm.toFixed(1)} mm
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex items-end gap-3 shrink-0">
           <BarChartHorizontal size={38} strokeWidth={1} style={{ color: 'var(--mw-text-muted)', flexShrink: 0 }} />

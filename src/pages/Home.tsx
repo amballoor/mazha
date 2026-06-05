@@ -48,7 +48,11 @@ export default function Home() {
   const navigate = useNavigate()
   const { data: records = [], isLoading, isError } = useRainfallData()
 
-  const [tab, setTab] = useState<'day' | 'week'>('day')
+  const [tab, setTab] = useState<'day' | 'week'>(() => {
+    try {
+      return sessionStorage.getItem('mazha_home_tab') === 'week' ? 'week' : 'day'
+    } catch { return 'day' }
+  })
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
     try {
       const saved = sessionStorage.getItem('mazha_home_selectedDate')
@@ -242,7 +246,16 @@ export default function Home() {
                     rainfallMm={mm}
                     maxMm={MAX_MM}
                     blueShade={blueShadeMap.get(loc.slug)}
-                    onClick={() => navigate(`/location/${loc.slug}`, { state: { date: displayDate.toISOString() } })}
+                    onClick={() => navigate(`/location/${loc.slug}`, {
+                      state: {
+                        date: displayDate.toISOString(),
+                        ...(tab === 'week' ? {
+                          tab: 'week',
+                          weekStart: weekStart.toISOString(),
+                          weekEnd: weekEnd.toISOString(),
+                        } : {}),
+                      },
+                    })}
                     timeRange={tab}
                   />
                 ))}
