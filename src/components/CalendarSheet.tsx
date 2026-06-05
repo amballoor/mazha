@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useScrollLock } from '@/hooks/useScrollLock'
 import { X } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
 import { FilterChip } from '@/components/FilterChip'
@@ -73,11 +74,7 @@ export function CalendarSheet({
     if (selectedDate) setNavMonth(selectedDate)
   }, [selectedDate])
 
-  // Lock body scroll when sheet is open
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [open])
+  useScrollLock(open)
 
   const effectiveMaxDate = maxDate ?? today
 

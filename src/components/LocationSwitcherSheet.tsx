@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { LOCATIONS } from '@/data/locations'
+import { useScrollLock } from '@/hooks/useScrollLock'
 
 type LocationSwitcherSheetProps = {
   open: boolean
@@ -10,10 +10,7 @@ type LocationSwitcherSheetProps = {
 }
 
 export function LocationSwitcherSheet({ open, currentSlug, onClose, onSelect }: LocationSwitcherSheetProps) {
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [open])
+  useScrollLock(open)
 
   return createPortal(
     <div
@@ -55,6 +52,7 @@ export function LocationSwitcherSheet({ open, currentSlug, onClose, onSelect }: 
         </div>
 
         {/* Location list */}
+        <div style={{ maxHeight: 'calc(80vh - 100px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
         {LOCATIONS.map((loc, i) => {
           const selected = loc.slug === currentSlug
           return (
@@ -95,6 +93,8 @@ export function LocationSwitcherSheet({ open, currentSlug, onClose, onSelect }: 
             </button>
           )
         })}
+
+        </div>
 
         {/* Safe-area bottom padding */}
         <div style={{ height: 36 }} />

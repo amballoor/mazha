@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useScrollLock } from '@/hooks/useScrollLock'
 
 export type LocationSortMode = 'high-to-low' | 'low-to-high' | 'date-asc' | 'date-desc'
 
@@ -18,10 +18,7 @@ type LocationSortSheetProps = {
 }
 
 export function LocationSortSheet({ open, onClose, value, onSelect }: LocationSortSheetProps) {
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [open])
+  useScrollLock(open)
 
   return createPortal(
     <div

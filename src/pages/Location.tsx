@@ -60,7 +60,7 @@ function StatBlock({ label, value }: { label: string; value: string }) {
 
 type AlertStatus = 'none' | 'blue' | 'yellow' | 'orange' | 'red'
 
-function AlertBlock({ status, mm }: { status: AlertStatus; mm: number }) {
+function AlertBlock({ status }: { status: AlertStatus }) {
   const isAlert = status === 'yellow' || status === 'orange' || status === 'red'
   const dotColor =
     status === 'yellow' ? '#ffc107'
@@ -90,7 +90,7 @@ function AlertBlock({ status, mm }: { status: AlertStatus; mm: number }) {
         </div>
       ) : (
         <span className="text-[18px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-          {mm > 0 ? 'No Alert' : 'No Rain'}
+          No Alert
         </span>
       )}
     </div>
@@ -120,6 +120,12 @@ export default function LocationPage() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('mazha_home_selectedDate', selectedDate.toISOString())
+    } catch {}
+  }, [selectedDate])
 
   if (!location) {
     return (
@@ -194,6 +200,7 @@ export default function LocationPage() {
   function handleLocationSwitch(newSlug: string) {
     setLocationSwitcherOpen(false)
     navigate(`/location/${newSlug}`, {
+      replace: true,
       state: { date: selectedDate.toISOString() },
     })
   }
@@ -207,10 +214,10 @@ export default function LocationPage() {
   }))
 
   return (
-    <div className="min-h-screen pb-8" style={{ background: 'var(--color-background, white)' }}>
+    <div className="min-h-screen overflow-x-hidden pb-8" style={{ background: 'var(--color-background, white)' }}>
 
       {/* Top nav */}
-      <div className="flex items-center justify-between px-5 py-6">
+      <div className="flex items-center justify-between px-5 pt-6 pb-4">
         <button
           className="flex items-center gap-2 min-h-[48px]"
           onClick={() => navigate(-1)}
@@ -224,7 +231,7 @@ export default function LocationPage() {
       <div className="flex flex-col gap-7 px-5">
 
         {/* Location Hero */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
 
           {/* Selected Location Header */}
           <div className="flex items-center justify-between">
@@ -239,16 +246,28 @@ export default function LocationPage() {
               className="flex items-center justify-center min-h-[48px] min-w-[48px]"
               aria-label="Switch location"
             >
-              <ChevronDown size={24} style={{ color: 'var(--mw-text-primary)' }} />
+              <span
+                className="flex items-center justify-center"
+                style={{
+                  background: 'var(--mw-surface)',
+                  border: '1px solid var(--mw-border)',
+                  paddingLeft: 6,
+                  paddingRight: 6,
+                  paddingTop: 9,
+                  paddingBottom: 9,
+                }}
+              >
+                <ChevronDown size={12} style={{ color: 'var(--mw-text-primary)' }} />
+              </span>
             </button>
           </div>
 
           {/* Selected Date Header card */}
           <div
-            className="flex flex-col gap-4 p-5 rounded-xl"
-            style={{ background: 'var(--mw-surface)', border: '1px solid var(--mw-progress-fill)' }}
+            className="flex flex-col gap-7 p-6 rounded-xl"
+            style={{ background: '#f9fcfd', border: '1px solid var(--mw-progress-fill)' }}
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <span className="text-[16px] font-normal leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
                 Selected Date
               </span>
@@ -256,10 +275,10 @@ export default function LocationPage() {
                 {formatDay(selectedDate)}
               </span>
             </div>
-            <div className="flex items-start gap-7 overflow-hidden">
+            <div className="flex items-start justify-between">
               <StatBlock label="Rainfall" value={`${selectedDayMm.toFixed(1)} mm`} />
               <StatBlock label="Week Overall" value={`${weekMm.toFixed(1)} mm`} />
-              <AlertBlock status={alertStatus} mm={selectedDayMm} />
+              <AlertBlock status={alertStatus} />
             </div>
           </div>
         </div>
@@ -358,7 +377,7 @@ export default function LocationPage() {
         {/* ── MONTH VIEW ── */}
         {view === 'month' && (
           <>
-            <div onClick={() => setActiveTip(null)}>
+            <div className="overflow-x-clip" onClick={() => setActiveTip(null)}>
               <div
                 className="rounded-lg flex flex-col gap-3"
                 style={{ background: 'var(--mw-surface)', padding: 10 }}

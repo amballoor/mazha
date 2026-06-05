@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { SortMode } from '@/types/rainfall'
+import { useScrollLock } from '@/hooks/useScrollLock'
 
 const OPTIONS: { value: SortMode; label: string }[] = [
   { value: 'high-to-low', label: 'Highest to lowest rainfall' },
@@ -16,10 +16,7 @@ type SortSheetProps = {
 }
 
 export function SortSheet({ open, onClose, value, onSelect }: SortSheetProps) {
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [open])
+  useScrollLock(open)
 
   return createPortal(
     <div
