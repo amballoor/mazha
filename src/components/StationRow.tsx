@@ -30,10 +30,11 @@ type StationRowProps = {
   blueShade?: string
   onClick?: () => void
   highlighted?: boolean
+  timeRange?: 'day' | 'week'
 }
 
-export const StationRow = forwardRef<HTMLLIElement, StationRowProps>(function StationRow({ label, rainfallMm, maxMm, blueShade, onClick, highlighted }, ref) {
-  const status = getRainfallStatus(rainfallMm)
+export const StationRow = forwardRef<HTMLLIElement, StationRowProps>(function StationRow({ label, rainfallMm, maxMm, blueShade, onClick, highlighted, timeRange = 'day' }, ref) {
+  const status = getRainfallStatus(rainfallMm, timeRange)
   const fillPct = getProgressPercent(rainfallMm, maxMm)
   const isNone = status === 'none'
   const isBlue = status === 'blue'

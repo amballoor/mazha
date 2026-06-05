@@ -1,7 +1,13 @@
 import type { RainfallRecord, RainfallStatus } from '@/types/rainfall'
 
-export function getRainfallStatus(mm: number): RainfallStatus {
-  if (mm === 0)   return 'none'
+export function getRainfallStatus(mm: number, timeRange: 'day' | 'week' = 'day'): RainfallStatus {
+  if (mm === 0) return 'none'
+  if (timeRange === 'week') {
+    if (mm <= 120) return 'blue'
+    if (mm <= 200) return 'yellow'
+    if (mm <= 350) return 'orange'
+    return 'red'
+  }
   if (mm <= 40)   return 'blue'
   if (mm <= 65)   return 'yellow'
   if (mm <= 100)  return 'orange'

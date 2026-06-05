@@ -172,8 +172,9 @@ export default function Home() {
       'var(--mw-fill-400)', 'var(--mw-fill-300)', 'var(--mw-fill-200)',
       'var(--mw-fill-100)',
     ]
+    const blueMax = tab === 'week' ? 120 : 40
     const blues = locationValues
-      .filter(v => v.mm > 0 && v.mm <= 40)
+      .filter(v => v.mm > 0 && v.mm <= blueMax)
       .sort((a, b) => b.mm - a.mm)
     const map = new Map<string, string>()
     blues.forEach((v, i) => map.set(v.loc.slug, SHADES[Math.min(i, SHADES.length - 1)]))
@@ -242,6 +243,7 @@ export default function Home() {
                     maxMm={MAX_MM}
                     blueShade={blueShadeMap.get(loc.slug)}
                     onClick={() => navigate(`/location/${loc.slug}`, { state: { date: displayDate.toISOString() } })}
+                    timeRange={tab}
                   />
                 ))}
           </ul>
