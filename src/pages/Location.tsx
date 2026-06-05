@@ -62,7 +62,6 @@ export default function LocationPage() {
   const [selectedMonth, setSelectedMonth] = useState(
     () => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
   )
-  const [activeTip, setActiveTip] = useState<string | null>(null)
   const [visibleDate, setVisibleDate] = useState<Date>(selectedDate)
   const [cardPhase, setCardPhase] = useState<'idle' | 'leaving' | 'entering'>('idle')
   const [showStickyHeader, setShowStickyHeader] = useState(false)
@@ -87,13 +86,12 @@ export default function LocationPage() {
   }, [])
 
   useEffect(() => {
-    if (!heroRef.current) return
-    const observer = new IntersectionObserver(
-      ([entry]) => setShowStickyHeader(!entry.isIntersecting),
-      { threshold: 0 },
-    )
-    observer.observe(heroRef.current)
-    return () => observer.disconnect()
+    const handleScroll = () => {
+      if (!heroRef.current) return
+      setShowStickyHeader(heroRef.current.getBoundingClientRect().bottom <= 0)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   if (!location) {
@@ -324,7 +322,7 @@ export default function LocationPage() {
             </button>
 
             <div style={{ opacity: view === 'month' ? 0.5 : 1, pointerEvents: view === 'month' ? 'none' : 'auto' }}>
-              <SortButton onClick={() => setSortSheetOpen(true)} />
+              <SortButton onClick={() => setSortSheetOpen(true)} iconOnly />
             </div>
           </div>
         </div>
@@ -363,7 +361,7 @@ export default function LocationPage() {
         {/* ── MONTH VIEW ── */}
         {view === 'month' && (
           <>
-            <div className="overflow-x-clip" onClick={() => setActiveTip(null)}>
+            <div className="overflow-x-clip">
               <div
                 className="rounded-lg flex flex-col gap-3"
                 style={{ background: 'var(--mw-surface)', padding: 10 }}
@@ -399,7 +397,7 @@ export default function LocationPage() {
                         const hasData = rainyDaySet.has(iso)
                         const fillWidthPct = hasData ? getProgressPercent(mm, MAX_MM) : 0
                         const fillColor = getCalendarFillColor(mm)
-                        const tipOpen = activeTip === iso
+                        const isSelected = selectedDate.toISOString() === iso
                         return (
                           <div
                             key={ci}
@@ -407,10 +405,10 @@ export default function LocationPage() {
                             style={{
                               height: 38,
                               padding: 4,
-                              border: '1px solid var(--mw-border)',
+                              border: isSelected ? '1.5px solid var(--mw-progress-fill)' : '1px solid var(--mw-border)',
                               borderRadius: 4,
                             }}
-                            onClick={hasData ? (e) => { e.stopPropagation(); setActiveTip(tipOpen ? null : iso) } : undefined}
+                            onClick={hasData ? () => handleDateRowClick(day) : undefined}
                           >
                             {hasData && (
                               <span
@@ -431,16 +429,6 @@ export default function LocationPage() {
                             >
                               {String(day.getDate()).padStart(2, '0')}
                             </span>
-                            {tipOpen && (
-                              <div
-                                className="absolute left-1/2 -translate-x-1/2 bottom-[calc(100%+4px)] z-10
-                                            px-2 py-1 rounded-md text-white text-[12px] font-normal
-                                            whitespace-nowrap pointer-events-none"
-                                style={{ background: 'var(--mw-text-primary)' }}
-                              >
-                                {mm.toFixed(1)} mm
-                              </div>
-                            )}
                           </div>
                         )
                       })}
