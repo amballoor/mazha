@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, useLocation as useRouterLocation } from 'react-router-dom'
-import { ChevronLeft, CalendarDays, List } from 'lucide-react'
+import { ChevronLeft, ChevronDown, MapPin, CalendarDays, List } from 'lucide-react'
 import { getLocationBySlug } from '@/data/locations'
 import { useRainfallData } from '@/hooks/useRainfallData'
 import { DateNav } from '@/components/DateNav'
@@ -8,13 +8,16 @@ import { StationRow } from '@/components/StationRow'
 import { ShareButton } from '@/components/ShareButton'
 import { SortButton } from '@/components/SortButton'
 import { LocationSortSheet, type LocationSortMode } from '@/components/LocationSortSheet'
+import { LocationSwitcherSheet } from '@/components/LocationSwitcherSheet'
 import {
   groupByDate,
   sumForLocation,
   startOfDay,
   formatShortDate,
   formatMonth,
+  formatDay,
   getRainfallStatus,
+  getCalendarWeekRange,
   getProgressPercent,
 } from '@/lib/rainfallUtils'
 
@@ -44,13 +47,52 @@ function getDaysInMonth(year: number, month: number): Date[] {
 
 function StatBlock({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 overflow-hidden">
+    <div className="flex flex-col gap-1 overflow-hidden shrink-0">
       <span className="text-[16px] leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
         {label}
       </span>
-      <span className="text-[18px] font-semibold leading-none" style={{ color: 'var(--mw-text-primary)' }}>
+      <span className="text-[18px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
         {value}
       </span>
+    </div>
+  )
+}
+
+type AlertStatus = 'none' | 'blue' | 'yellow' | 'orange' | 'red'
+
+function AlertBlock({ status, mm }: { status: AlertStatus; mm: number }) {
+  const isAlert = status === 'yellow' || status === 'orange' || status === 'red'
+  const dotColor =
+    status === 'yellow' ? '#ffc107'
+    : status === 'orange' ? '#ff6d00'
+    : status === 'red' ? '#df1f1f'
+    : null
+  const label =
+    status === 'yellow' ? 'Yellow Alert'
+    : status === 'orange' ? 'Orange Alert'
+    : status === 'red' ? 'Red Alert'
+    : 'No Alert'
+
+  return (
+    <div className="flex flex-col gap-1 shrink-0">
+      <span className="text-[16px] leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
+        Alert
+      </span>
+      {isAlert && dotColor ? (
+        <div className="flex items-center gap-1">
+          <span
+            className="rounded-full shrink-0"
+            style={{ width: 8, height: 8, background: dotColor }}
+          />
+          <span className="text-[18px] font-medium leading-none whitespace-nowrap" style={{ color: dotColor }}>
+            {label}
+          </span>
+        </div>
+      ) : (
+        <span className="text-[18px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
+          {mm > 0 ? 'No Alert' : 'No Rain'}
+        </span>
+      )}
     </div>
   )
 }
@@ -62,36 +104,22 @@ export default function LocationPage() {
   const location = getLocationBySlug(slug ?? '')
   const { data: records = [] } = useRainfallData()
 
-  const initialDate = routerState?.date ? new Date(routerState.date) : new Date()
-  const focusDate: Date | null = routerState?.date ? startOfDay(new Date(routerState.date)) : null
-
+  const [selectedDate, setSelectedDate] = useState<Date>(() =>
+    routerState?.date ? startOfDay(new Date(routerState.date)) : startOfDay(new Date())
+  )
   const [view, setView] = useState<'list' | 'month'>('list')
   const [sortMode, setSortMode] = useState<LocationSortMode>('date-desc')
   const [sortSheetOpen, setSortSheetOpen] = useState(false)
+  const [locationSwitcherOpen, setLocationSwitcherOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(
-    () => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1)
+    () => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
   )
-  const [visibleCount, setVisibleCount] = useState(focusDate ? Infinity : INITIAL_COUNT)
-  const [focusActive, setFocusActive] = useState(!!focusDate)
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT)
   const [activeTip, setActiveTip] = useState<string | null>(null)
-  const focusRef = useRef<HTMLLIElement>(null)
-  const scrolledRef = useRef(false)
 
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
-
-  useEffect(() => {
-    if (!focusDate) return
-    const timer = setTimeout(() => setFocusActive(false), 1500)
-    return () => clearTimeout(timer)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!focusRef.current || scrolledRef.current) return
-    scrolledRef.current = true
-    setTimeout(() => focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
-  }, [records])
 
   if (!location) {
     return (
@@ -104,16 +132,11 @@ export default function LocationPage() {
     )
   }
 
-  const now = new Date()
-  const today = startOfDay(now)
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  const weekAgo = new Date(today)
-  weekAgo.setDate(weekAgo.getDate() - 6)
-
-  const yesterdayMm = sumForLocation(records, location.name, yesterday, yesterday)
-  const weekMm = sumForLocation(records, location.name, weekAgo, today)
-  const yesterdayLabel = `Yesterday (${formatShortDate(yesterday)})`
+  // Header card stats — computed from selectedDate
+  const selectedDayMm = sumForLocation(records, location.name, selectedDate, selectedDate)
+  const { start: weekStart, end: weekEnd } = getCalendarWeekRange(selectedDate)
+  const weekMm = sumForLocation(records, location.name, weekStart, weekEnd)
+  const alertStatus = getRainfallStatus(selectedDayMm)
 
   const allHistory = groupByDate(records, location.name).filter(row =>
     row.date.getFullYear() === selectedMonth.getFullYear() &&
@@ -143,8 +166,9 @@ export default function LocationPage() {
       map.set(startOfDay(r.date).toISOString(), SHADES[Math.min(i, SHADES.length - 1)])
     )
     return map
-  }, [allHistory])
+  }, [allHistory]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const now = new Date()
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const isCurrentMonth = selectedMonth >= currentMonthStart
 
@@ -158,6 +182,20 @@ export default function LocationPage() {
   function nextMonth() {
     setSelectedMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))
     setVisibleCount(INITIAL_COUNT)
+  }
+
+  function handleDateRowClick(date: Date) {
+    const d = startOfDay(date)
+    setSelectedDate(d)
+    setSelectedMonth(new Date(d.getFullYear(), d.getMonth(), 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleLocationSwitch(newSlug: string) {
+    setLocationSwitcherOpen(false)
+    navigate(`/location/${newSlug}`, {
+      state: { date: selectedDate.toISOString() },
+    })
   }
 
   const calendarDays = getDaysInMonth(selectedMonth.getFullYear(), selectedMonth.getMonth())
@@ -185,18 +223,57 @@ export default function LocationPage() {
 
       <div className="flex flex-col gap-7 px-5">
 
-        {/* Hero card */}
-        <div
-          className="flex flex-col gap-4 p-5 rounded-xl"
-          style={{ background: 'var(--mw-surface)', border: '1px solid var(--mw-border)' }}
-        >
-          <p className="text-[26px] font-normal leading-tight w-full" style={{ color: 'var(--mw-text-primary)' }}>
-            {location.name}
-          </p>
-          <div className="flex items-start justify-between overflow-hidden whitespace-nowrap">
-            <StatBlock label={yesterdayLabel} value={`${yesterdayMm.toFixed(1)} mm`} />
-            <StatBlock label="This Week Overall" value={`${weekMm.toFixed(1)} mm`} />
+        {/* Location Hero */}
+        <div className="flex flex-col gap-4">
+
+          {/* Selected Location Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin size={24} style={{ color: 'var(--mw-text-primary)', flexShrink: 0 }} />
+              <span className="text-[26px] font-normal leading-none" style={{ color: 'var(--mw-text-primary)' }}>
+                {location.name}
+              </span>
+            </div>
+            <button
+              onClick={() => setLocationSwitcherOpen(true)}
+              className="flex items-center justify-center min-h-[48px] min-w-[48px]"
+              aria-label="Switch location"
+            >
+              <ChevronDown size={24} style={{ color: 'var(--mw-text-primary)' }} />
+            </button>
           </div>
+
+          {/* Selected Date Header card */}
+          <div
+            className="flex flex-col gap-4 p-5 rounded-xl"
+            style={{ background: 'var(--mw-surface)', border: '1px solid var(--mw-progress-fill)' }}
+          >
+            <div className="flex flex-col gap-1">
+              <span className="text-[16px] font-normal leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
+                Selected Date
+              </span>
+              <span className="text-[18px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
+                {formatDay(selectedDate)}
+              </span>
+            </div>
+            <div className="flex items-start gap-7 overflow-hidden">
+              <StatBlock label="Rainfall" value={`${selectedDayMm.toFixed(1)} mm`} />
+              <StatBlock label="Week Overall" value={`${weekMm.toFixed(1)} mm`} />
+              <AlertBlock status={alertStatus} mm={selectedDayMm} />
+            </div>
+          </div>
+        </div>
+
+        {/* Monthly History section divider */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="flex-1 h-px" style={{ background: 'var(--mw-border)' }} />
+          <span
+            className="text-[14px] font-semibold leading-none shrink-0"
+            style={{ color: 'var(--mw-text-primary)' }}
+          >
+            Monthly History
+          </span>
+          <div className="flex-1 h-px" style={{ background: 'var(--mw-border)' }} />
         </div>
 
         {/* Action bar */}
@@ -215,7 +292,6 @@ export default function LocationPage() {
             />
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {/* View toggle — blue border, padding-driven width */}
             <button
               onClick={() => setView(v => v === 'list' ? 'month' : 'list')}
               className="flex items-center justify-center h-[42px] rounded-lg"
@@ -228,7 +304,6 @@ export default function LocationPage() {
               }
             </button>
 
-            {/* Sort — active in list, disabled in month */}
             <div style={{ opacity: view === 'month' ? 0.5 : 1, pointerEvents: view === 'month' ? 'none' : 'auto' }}>
               <SortButton onClick={() => setSortSheetOpen(true)} />
             </div>
@@ -246,16 +321,16 @@ export default function LocationPage() {
               ) : (
                 visibleHistory.map(row => {
                   const iso = startOfDay(row.date).toISOString()
-                  const isFocused = focusDate?.toISOString() === iso
+                  const isSelected = selectedDate.toISOString() === iso
                   return (
                     <StationRow
                       key={iso}
-                      ref={isFocused ? focusRef : undefined}
                       label={formatShortDate(row.date)}
                       rainfallMm={row.mm}
                       maxMm={MAX_MM}
                       blueShade={blueShadeMap.get(iso)}
-                      highlighted={isFocused && focusActive}
+                      highlighted={isSelected}
+                      onClick={() => handleDateRowClick(row.date)}
                     />
                   )
                 })
@@ -288,7 +363,6 @@ export default function LocationPage() {
                 className="rounded-lg flex flex-col gap-3"
                 style={{ background: 'var(--mw-surface)', padding: 10 }}
               >
-                {/* Day headers — Su Mo Tu We Th Fr Sa */}
                 <div className="flex gap-2 opacity-70">
                   {DAY_LABELS.map(d => (
                     <div key={d} className="flex-1 flex items-center justify-center" style={{ padding: 4 }}>
@@ -299,7 +373,6 @@ export default function LocationPage() {
                   ))}
                 </div>
 
-                {/* Calendar day grid */}
                 {(() => {
                   const cells: (Date | null)[] = [
                     ...Array(firstDayOffset).fill(null),
@@ -383,6 +456,13 @@ export default function LocationPage() {
         onClose={() => setSortSheetOpen(false)}
         value={sortMode}
         onSelect={(mode) => { setSortMode(mode); setSortSheetOpen(false) }}
+      />
+
+      <LocationSwitcherSheet
+        open={locationSwitcherOpen}
+        currentSlug={slug ?? ''}
+        onClose={() => setLocationSwitcherOpen(false)}
+        onSelect={handleLocationSwitch}
       />
     </div>
   )

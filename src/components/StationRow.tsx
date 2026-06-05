@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import { Sun } from 'lucide-react'
+import { Sun, Droplets } from 'lucide-react'
 import type { RainfallStatus } from '@/types/rainfall'
 import { getRainfallStatus, getStatusLabel, getProgressPercent } from '@/lib/rainfallUtils'
 
@@ -36,6 +36,7 @@ export const StationRow = forwardRef<HTMLLIElement, StationRowProps>(function St
   const status = getRainfallStatus(rainfallMm)
   const fillPct = getProgressPercent(rainfallMm, maxMm)
   const isNone = status === 'none'
+  const isBlue = status === 'blue'
   const isAlert = status === 'yellow' || status === 'orange' || status === 'red'
   const alertDot = getAlertDotColor(status)
   const statusLabel = getStatusLabel(status)
@@ -85,9 +86,12 @@ export const StationRow = forwardRef<HTMLLIElement, StationRowProps>(function St
 
           {/* mm value — shown for all except none */}
           {!isNone && (
-            <span className="text-[16px] leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
-              {rainfallMm.toFixed(1)} mm
-            </span>
+            <>
+              {isBlue && <Droplets size={16} style={{ color: 'var(--mw-text-muted)' }} />}
+              <span className="text-[16px] leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
+                {rainfallMm.toFixed(1)} mm
+              </span>
+            </>
           )}
         </div>
       </div>

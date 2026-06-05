@@ -59,6 +59,10 @@ export default function Home() {
   const [sortMode, setSortMode] = useState<SortMode>('high-to-low')
   const [sortSheetOpen, setSortSheetOpen] = useState(false)
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   const [today] = useState(() => startOfDay(new Date()))
   const mostRecent = useMemo(
     () => records.length > 0 ? getMostRecentDate(records) : today,

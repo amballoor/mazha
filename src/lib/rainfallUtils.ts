@@ -79,6 +79,15 @@ export function getWeekRange(anchor: Date): { start: Date; end: Date } {
   return { start, end: endOfDay(anchor) }
 }
 
+export function getCalendarWeekRange(date: Date): { start: Date; end: Date } {
+  const d = startOfDay(date)
+  const start = new Date(d)
+  start.setDate(d.getDate() - d.getDay()) // back to Sunday
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)        // forward to Saturday
+  return { start, end: endOfDay(end) }
+}
+
 export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
 }
