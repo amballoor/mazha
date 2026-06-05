@@ -9,13 +9,13 @@ import { ShareButton } from '@/components/ShareButton'
 import { SortButton } from '@/components/SortButton'
 import { LocationSortSheet, type LocationSortMode } from '@/components/LocationSortSheet'
 import { LocationSwitcherSheet } from '@/components/LocationSwitcherSheet'
+import { SelectedDateCard } from '@/components/SelectedDateCard'
 import {
   groupByDate,
   sumForLocation,
   startOfDay,
   formatShortDate,
   formatMonth,
-  formatDay,
   getRainfallStatus,
   getCalendarWeekRange,
   getProgressPercent,
@@ -32,7 +32,6 @@ function getCalendarFillColor(mm: number): string {
   }
 }
 
-const INITIAL_COUNT = 15
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 function getDaysInMonth(year: number, month: number): Date[] {
@@ -45,57 +44,6 @@ function getDaysInMonth(year: number, month: number): Date[] {
   return days
 }
 
-function StatBlock({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1 overflow-hidden shrink-0">
-      <span className="text-[16px] leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
-        {label}
-      </span>
-      <span className="text-[18px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-        {value}
-      </span>
-    </div>
-  )
-}
-
-type AlertStatus = 'none' | 'blue' | 'yellow' | 'orange' | 'red'
-
-function AlertBlock({ status }: { status: AlertStatus }) {
-  const isAlert = status === 'yellow' || status === 'orange' || status === 'red'
-  const dotColor =
-    status === 'yellow' ? '#ffc107'
-    : status === 'orange' ? '#ff6d00'
-    : status === 'red' ? '#df1f1f'
-    : null
-  const label =
-    status === 'yellow' ? 'Yellow Alert'
-    : status === 'orange' ? 'Orange Alert'
-    : status === 'red' ? 'Red Alert'
-    : 'No Alert'
-
-  return (
-    <div className="flex flex-col gap-1 shrink-0">
-      <span className="text-[16px] leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
-        Alert
-      </span>
-      {isAlert && dotColor ? (
-        <div className="flex items-center gap-1">
-          <span
-            className="rounded-full shrink-0"
-            style={{ width: 8, height: 8, background: dotColor }}
-          />
-          <span className="text-[18px] font-medium leading-none whitespace-nowrap" style={{ color: dotColor }}>
-            {label}
-          </span>
-        </div>
-      ) : (
-        <span className="text-[18px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-          No Alert
-        </span>
-      )}
-    </div>
-  )
-}
 
 export default function LocationPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -114,12 +62,13 @@ export default function LocationPage() {
   const [selectedMonth, setSelectedMonth] = useState(
     () => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
   )
-  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT)
   const [activeTip, setActiveTip] = useState<string | null>(null)
   const [visibleDate, setVisibleDate] = useState<Date>(selectedDate)
   const [cardPhase, setCardPhase] = useState<'idle' | 'leaving' | 'entering'>('idle')
+  const [showStickyHeader, setShowStickyHeader] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const heroRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -135,6 +84,16 @@ export default function LocationPage() {
     return () => {
       observerRef.current?.disconnect()
     }
+  }, [])
+
+  useEffect(() => {
+    if (!heroRef.current) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyHeader(!entry.isIntersecting),
+      { threshold: 0 },
+    )
+    observer.observe(heroRef.current)
+    return () => observer.disconnect()
   }, [])
 
   if (!location) {
@@ -165,9 +124,6 @@ export default function LocationPage() {
     : sortMode === 'low-to-high' ? [...allHistory].sort((a, b) => a.mm - b.mm)
     : sortMode === 'date-asc' ? [...allHistory].sort((a, b) => a.date.getTime() - b.date.getTime())
     : [...allHistory].sort((a, b) => b.date.getTime() - a.date.getTime())
-  const visibleHistory = sortedHistory.slice(0, visibleCount)
-  const hasMore = visibleCount < allHistory.length
-
   const SHADES = [
     'var(--mw-fill-700)', 'var(--mw-fill-600)', 'var(--mw-fill-500)',
     'var(--mw-fill-400)', 'var(--mw-fill-300)', 'var(--mw-fill-200)',
@@ -193,11 +149,9 @@ export default function LocationPage() {
 
   function prevMonth() {
     setSelectedMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))
-    setVisibleCount(INITIAL_COUNT)
   }
   function nextMonth() {
     setSelectedMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))
-    setVisibleCount(INITIAL_COUNT)
   }
 
   function handleCardAnimEnd() {
@@ -263,10 +217,30 @@ export default function LocationPage() {
         </button>
       </div>
 
+      {/* Sticky Header */}
+      <div
+        className="fixed top-0 left-0 right-0 z-50 flex items-center px-5 h-[60px]"
+        style={{
+          background: 'var(--color-background, white)',
+          borderBottom: '1px solid var(--mw-border)',
+          transform: showStickyHeader ? 'translateY(0)' : 'translateY(-100%)',
+          opacity: showStickyHeader ? 1 : 0,
+          transition: 'transform 250ms ease, opacity 250ms ease',
+          pointerEvents: showStickyHeader ? 'auto' : 'none',
+        }}
+      >
+        <div className="flex items-center" style={{ gap: 4 }}>
+          <MapPin size={18} style={{ color: 'var(--mw-text-primary)', flexShrink: 0 }} />
+          <span className="text-[16px] leading-none" style={{ color: 'var(--mw-text-primary)' }}>
+            {location.name}
+          </span>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-7 px-5">
 
         {/* Location Hero */}
-        <div className="flex flex-col gap-2">
+        <div ref={heroRef} className="flex flex-col gap-2">
 
           {/* Selected Location Header */}
           <div className="flex items-center justify-between">
@@ -298,33 +272,15 @@ export default function LocationPage() {
           </div>
 
           {/* Selected Date Header card */}
-          <div
-            ref={cardRef}
-            className="flex flex-col gap-7 p-6 rounded-xl"
+          <SelectedDateCard
+            date={visibleDate}
+            rainfallMm={selectedDayMm}
+            weekMm={weekMm}
+            alertStatus={alertStatus}
+            cardRef={cardRef}
             onAnimationEnd={handleCardAnimEnd}
-            style={{
-              background: '#f9fcfd',
-              border: '1px solid var(--mw-progress-fill)',
-              animation:
-                cardPhase === 'leaving'  ? 'card-fade-out 300ms ease-out forwards' :
-                cardPhase === 'entering' ? 'card-fade-in 300ms ease-out forwards' :
-                'none',
-            }}
-          >
-            <div className="flex flex-col gap-2">
-              <span className="text-[16px] font-normal leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
-                Selected Date
-              </span>
-              <span className="text-[18px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-                {formatDay(visibleDate)}
-              </span>
-            </div>
-            <div className="flex items-start justify-between">
-              <StatBlock label="Rainfall" value={`${selectedDayMm.toFixed(1)} mm`} />
-              <StatBlock label="Week Overall" value={`${weekMm.toFixed(1)} mm`} />
-              <AlertBlock status={alertStatus} />
-            </div>
-          </div>
+            cardPhase={cardPhase}
+          />
         </div>
 
         {/* Monthly History section divider */}
@@ -382,7 +338,7 @@ export default function LocationPage() {
                   No data for this month.
                 </li>
               ) : (
-                visibleHistory.map(row => {
+                sortedHistory.map(row => {
                   const iso = startOfDay(row.date).toISOString()
                   const isSelected = selectedDate.toISOString() === iso
                   return (
@@ -399,20 +355,6 @@ export default function LocationPage() {
                 })
               )}
             </ul>
-
-            {hasMore && (
-              <button
-                className="flex items-center justify-center w-full h-[52px] rounded-lg text-[16px] font-medium"
-                style={{
-                  background: 'white',
-                  border: '1px solid var(--mw-text-primary)',
-                  color: 'var(--mw-text-primary)',
-                }}
-                onClick={() => setVisibleCount(Infinity)}
-              >
-                View previous days
-              </button>
-            )}
 
             <ShareButton entries={shareEntries} date={selectedMonth} />
           </>

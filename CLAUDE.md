@@ -93,6 +93,13 @@ Take a `get_screenshot` after inspection to visually verify the expected design 
 
 8. **Verify ALL dimension specs before writing a single line of code** — height, padding (all four sides independently), row/column gaps, border radius, font weight, font size, overflow. Never estimate or reuse values from a related component. Always read them from `get_design_context` on the specific atomic node. Common mistakes: cell height (often explicit, not derived from padding), gap between rows vs between cells (can differ), font weight (Regular vs Medium look similar in screenshots but differ in code).
 
+9. **Exhaustive spec checklist — run `get_variable_defs` on the component node before writing any value:**
+   - **Icon stroke width** — always check via `get_design_context`; never assume the lucide default (2). Use the exact value from the design.
+   - **Every gap and padding** — look up the design token name and value (e.g. `spacing/xs=4px`, `spacing/md=12px`, `spacing/3xl=28px`). Map to the equivalent Tailwind class; do not hardcode raw numbers.
+   - **Every text node's named text style** — confirm which named style applies (`Mazha/Body/Default`, `Mazha/Label/Stat`, `Mazha/Label/Station`, etc.) via `get_variable_defs`. Apply the exact size, weight, and line-height from that token; different styles at the same size can differ in weight (Regular vs Medium).
+   - **Reuse design system tokens** — every color, spacing, and typography value that exists as a named design token must map to the project's CSS variable (`--mw-*`) or the equivalent Tailwind class. Never hardcode a hex or pixel value that already has a named token.
+   - **SVG / data-URI gradients** — embed the SVG string directly (`url("data:image/svg+xml;utf8,...")`) without `encodeURIComponent()`. Manually pre-encode only special characters (`#` → `%23`) inside the SVG string itself. Using `encodeURIComponent()` on a string that already contains `%23` will double-encode it to `%2523` and break the gradient reference.
+
 ---
 
 ## 12 Monitoring Locations
