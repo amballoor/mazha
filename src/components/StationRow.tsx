@@ -29,9 +29,10 @@ type StationRowProps = {
   maxMm: number
   blueShade?: string
   onClick?: () => void
+  highlighted?: boolean
 }
 
-export const StationRow = forwardRef<HTMLLIElement, StationRowProps>(function StationRow({ label, rainfallMm, maxMm, blueShade, onClick }, ref) {
+export const StationRow = forwardRef<HTMLLIElement, StationRowProps>(function StationRow({ label, rainfallMm, maxMm, blueShade, onClick, highlighted }, ref) {
   const status = getRainfallStatus(rainfallMm)
   const fillPct = getProgressPercent(rainfallMm, maxMm)
   const isNone = status === 'none'
@@ -44,7 +45,11 @@ export const StationRow = forwardRef<HTMLLIElement, StationRowProps>(function St
     <li
       ref={ref}
       className="flex flex-col gap-[6px] h-16 w-full px-3 py-[10px] rounded-lg shrink-0"
-      style={{ background: 'var(--mw-surface)' }}
+      style={{
+        background: 'var(--mw-surface)',
+        border: highlighted ? '1px solid var(--mw-progress-fill)' : '1px solid transparent',
+        transition: 'border-color 600ms ease-out',
+      }}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
     >

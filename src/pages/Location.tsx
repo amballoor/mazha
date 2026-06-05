@@ -29,7 +29,7 @@ function getCalendarFillColor(mm: number): string {
   }
 }
 
-const ROWS_PER_PAGE = 7
+const INITIAL_COUNT = 15
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 function getDaysInMonth(year: number, month: number): Date[] {
@@ -71,15 +71,27 @@ export default function LocationPage() {
   const [selectedMonth, setSelectedMonth] = useState(
     () => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1)
   )
-  const [visibleCount, setVisibleCount] = useState(ROWS_PER_PAGE)
+  const [visibleCount, setVisibleCount] = useState(focusDate ? Infinity : INITIAL_COUNT)
+  const [focusActive, setFocusActive] = useState(!!focusDate)
   const [activeTip, setActiveTip] = useState<string | null>(null)
   const focusRef = useRef<HTMLLIElement>(null)
+  const scrolledRef = useRef(false)
 
   useEffect(() => {
-    if (focusRef.current) {
-      setTimeout(() => focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
-    }
+    window.scrollTo(0, 0)
   }, [])
+
+  useEffect(() => {
+    if (!focusDate) return
+    const timer = setTimeout(() => setFocusActive(false), 1500)
+    return () => clearTimeout(timer)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!focusRef.current || scrolledRef.current) return
+    scrolledRef.current = true
+    setTimeout(() => focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+  }, [records])
 
   if (!location) {
     return (
@@ -141,11 +153,11 @@ export default function LocationPage() {
 
   function prevMonth() {
     setSelectedMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))
-    setVisibleCount(ROWS_PER_PAGE)
+    setVisibleCount(INITIAL_COUNT)
   }
   function nextMonth() {
     setSelectedMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))
-    setVisibleCount(ROWS_PER_PAGE)
+    setVisibleCount(INITIAL_COUNT)
   }
 
   const calendarDays = getDaysInMonth(selectedMonth.getFullYear(), selectedMonth.getMonth())
@@ -243,6 +255,7 @@ export default function LocationPage() {
                       rainfallMm={row.mm}
                       maxMm={MAX_MM}
                       blueShade={blueShadeMap.get(iso)}
+                      highlighted={isFocused && focusActive}
                     />
                   )
                 })
@@ -257,7 +270,7 @@ export default function LocationPage() {
                   border: '1px solid var(--mw-text-primary)',
                   color: 'var(--mw-text-primary)',
                 }}
-                onClick={() => setVisibleCount(c => c + ROWS_PER_PAGE)}
+                onClick={() => setVisibleCount(Infinity)}
               >
                 View previous days
               </button>
