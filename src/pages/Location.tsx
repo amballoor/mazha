@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation as useRouterLocation } from 'react-router-dom'
 import { ChevronLeft, ChevronDown, MapPin, CalendarDays, List } from 'lucide-react'
 import { getLocationBySlug } from '@/data/locations'
@@ -116,6 +116,10 @@ export default function LocationPage() {
   )
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT)
   const [activeTip, setActiveTip] = useState<string | null>(null)
+  const [visibleDate, setVisibleDate] = useState<Date>(selectedDate)
+  const [cardPhase, setCardPhase] = useState<'idle' | 'leaving' | 'entering'>('idle')
+  const cardRef = useRef<HTMLDivElement>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -126,6 +130,12 @@ export default function LocationPage() {
       sessionStorage.setItem('mazha_home_selectedDate', selectedDate.toISOString())
     } catch {}
   }, [selectedDate])
+
+  useEffect(() => {
+    return () => {
+      observerRef.current?.disconnect()
+    }
+  }, [])
 
   if (!location) {
     return (
@@ -138,9 +148,9 @@ export default function LocationPage() {
     )
   }
 
-  // Header card stats — computed from selectedDate
-  const selectedDayMm = sumForLocation(records, location.name, selectedDate, selectedDate)
-  const { start: weekStart, end: weekEnd } = getCalendarWeekRange(selectedDate)
+  // Header card stats — computed from visibleDate (trails selectedDate during animation)
+  const selectedDayMm = sumForLocation(records, location.name, visibleDate, visibleDate)
+  const { start: weekStart, end: weekEnd } = getCalendarWeekRange(visibleDate)
   const weekMm = sumForLocation(records, location.name, weekStart, weekEnd)
   const alertStatus = getRainfallStatus(selectedDayMm)
 
@@ -190,11 +200,36 @@ export default function LocationPage() {
     setVisibleCount(INITIAL_COUNT)
   }
 
+  function handleCardAnimEnd() {
+    if (cardPhase === 'leaving') {
+      setVisibleDate(selectedDate)
+      setCardPhase('entering')
+    } else {
+      setCardPhase('idle')
+    }
+  }
+
   function handleDateRowClick(date: Date) {
     const d = startOfDay(date)
     setSelectedDate(d)
     setSelectedMonth(new Date(d.getFullYear(), d.getMonth(), 1))
     window.scrollTo({ top: 0, behavior: 'smooth' })
+
+    observerRef.current?.disconnect()
+    if (!cardRef.current) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect()
+          observerRef.current = null
+          setCardPhase('leaving')
+        }
+      },
+      { threshold: 0.5 },
+    )
+    observerRef.current = observer
+    observer.observe(cardRef.current)
   }
 
   function handleLocationSwitch(newSlug: string) {
@@ -264,15 +299,24 @@ export default function LocationPage() {
 
           {/* Selected Date Header card */}
           <div
+            ref={cardRef}
             className="flex flex-col gap-7 p-6 rounded-xl"
-            style={{ background: '#f9fcfd', border: '1px solid var(--mw-progress-fill)' }}
+            onAnimationEnd={handleCardAnimEnd}
+            style={{
+              background: '#f9fcfd',
+              border: '1px solid var(--mw-progress-fill)',
+              animation:
+                cardPhase === 'leaving'  ? 'card-fade-out 300ms ease-out forwards' :
+                cardPhase === 'entering' ? 'card-fade-in 300ms ease-out forwards' :
+                'none',
+            }}
           >
             <div className="flex flex-col gap-2">
               <span className="text-[16px] font-normal leading-none whitespace-nowrap" style={{ color: 'var(--mw-text-muted)' }}>
                 Selected Date
               </span>
               <span className="text-[18px] font-medium leading-none" style={{ color: 'var(--mw-text-primary)' }}>
-                {formatDay(selectedDate)}
+                {formatDay(visibleDate)}
               </span>
             </div>
             <div className="flex items-start justify-between">
