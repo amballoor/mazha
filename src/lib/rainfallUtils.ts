@@ -88,6 +88,17 @@ export function getCalendarWeekRange(date: Date): { start: Date; end: Date } {
   return { start, end: endOfDay(end) }
 }
 
+export function getMonthClampedCalendarWeek(date: Date): { start: Date; end: Date } {
+  const d = startOfDay(date)
+  const calWeekStart = new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay())
+  const calWeekEnd   = new Date(calWeekStart.getFullYear(), calWeekStart.getMonth(), calWeekStart.getDate() + 6)
+  const monthStart   = new Date(d.getFullYear(), d.getMonth(), 1)
+  const monthEnd     = new Date(d.getFullYear(), d.getMonth() + 1, 0)
+  const clampedStart = calWeekStart < monthStart ? monthStart : calWeekStart
+  const clampedEnd   = calWeekEnd   > monthEnd   ? monthEnd   : calWeekEnd
+  return { start: startOfDay(clampedStart), end: endOfDay(clampedEnd) }
+}
+
 export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
 }

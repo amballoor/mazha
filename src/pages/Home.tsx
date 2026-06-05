@@ -14,7 +14,7 @@ import type { RainfallRecord, SortMode } from '@/types/rainfall'
 import {
   filterByDay,
   filterByDateRange,
-  getWeekRange,
+  getMonthClampedCalendarWeek,
   getMostRecentDate,
   startOfDay,
   formatDay,
@@ -97,18 +97,14 @@ export default function Home() {
     })
   }
   function prevWeek() {
-    setSelectedDate((d) => {
-      const prev = new Date(d ?? displayDate)
-      prev.setDate(prev.getDate() - 7)
-      return prev
-    })
+    const { start } = getMonthClampedCalendarWeek(displayDate)
+    setSelectedDate(new Date(start.getFullYear(), start.getMonth(), start.getDate() - 1))
   }
   function nextWeek() {
-    setSelectedDate((d) => {
-      const next = new Date(d ?? displayDate)
-      next.setDate(next.getDate() + 7)
-      return next
-    })
+    const { end } = getMonthClampedCalendarWeek(displayDate)
+    const next = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1)
+    if (next > today) return
+    setSelectedDate(next)
   }
 
   function prevRainyDay() {
@@ -135,14 +131,14 @@ export default function Home() {
     })
   }
 
-  const { start: weekStart, end: weekEnd } = getWeekRange(displayDate)
+  const { start: weekStart, end: weekEnd } = getMonthClampedCalendarWeek(displayDate)
 
   const dateLabel =
     tab === 'day'
       ? formatDay(displayDate)
       : formatWeekRange(weekStart, weekEnd)
 
-  const isNextDisabled = displayDate >= today
+  const isNextDisabled = tab === 'week' ? weekEnd >= today : displayDate >= today
 
   const hasPrevRainyDay = showRainOnly
     ? [...rainyDates].some(d => new Date(d) < displayDate)
