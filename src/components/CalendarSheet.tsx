@@ -42,8 +42,9 @@ type CalendarSheetProps = {
   onDateSelect: (date: Date) => void
   maxDate?: Date
   disabledDates?: (date: Date) => boolean
-  showRainOnly: boolean
-  onToggleRainOnly: () => void
+  showRainOnly?: boolean
+  onToggleRainOnly?: () => void
+  mode?: 'day' | 'month'
 }
 
 export function CalendarSheet({
@@ -53,18 +54,19 @@ export function CalendarSheet({
   onDateSelect,
   maxDate,
   disabledDates,
-  showRainOnly,
+  showRainOnly = false,
   onToggleRainOnly,
+  mode = 'day',
 }: CalendarSheetProps) {
   const today = new Date()
-  const [view, setView] = useState<View>('day')
+  const [view, setView] = useState<View>(mode === 'month' ? 'month' : 'day')
   const [navMonth, setNavMonth] = useState<Date>(selectedDate ?? today)
   const [viewYear, setViewYear] = useState<number>((selectedDate ?? today).getFullYear())
 
-  // Reset to day view when sheet closes
+  // Reset view when sheet closes
   useEffect(() => {
-    if (!open) setView('day')
-  }, [open])
+    if (!open) setView(mode === 'month' ? 'month' : 'day')
+  }, [open, mode])
 
   // Sync navMonth when selectedDate changes externally
   useEffect(() => {
@@ -213,8 +215,13 @@ export function CalendarSheet({
                       key={name}
                       disabled={disabled}
                       onClick={() => {
-                        setNavMonth(new Date(viewYear, idx, 1))
-                        setView('day')
+                        if (mode === 'month') {
+                          onDateSelect(new Date(viewYear, idx, 1))
+                          onClose()
+                        } else {
+                          setNavMonth(new Date(viewYear, idx, 1))
+                          setView('day')
+                        }
                       }}
                       className="h-[56px] rounded-xl text-base font-medium transition-colors"
                       style={{
@@ -273,11 +280,13 @@ export function CalendarSheet({
 
         {/* Action row */}
         <div className="flex items-center gap-3 mt-4">
-          <FilterChip
-            active={showRainOnly}
-            onToggle={onToggleRainOnly}
-            className="flex-1 justify-center"
-          />
+          {mode === 'day' && (
+            <FilterChip
+              active={showRainOnly}
+              onToggle={onToggleRainOnly ?? (() => {})}
+              className="flex-1 justify-center"
+            />
+          )}
           <button
             onClick={onClose}
             className="flex items-center gap-2 h-[46px] px-3 py-2 rounded-lg text-[16px] leading-none shrink-0 transition-colors"

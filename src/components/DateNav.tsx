@@ -14,6 +14,7 @@ type DateNavProps = {
   disabledDates?: (date: Date) => boolean
   showRainOnly?: boolean
   onToggleRainOnly?: () => void
+  calendarMode?: 'day' | 'month'
 }
 
 export function DateNav({
@@ -28,6 +29,7 @@ export function DateNav({
   disabledDates,
   showRainOnly = false,
   onToggleRainOnly,
+  calendarMode = 'day',
 }: DateNavProps) {
   const [open, setOpen] = useState(false)
 
@@ -85,6 +87,7 @@ export function DateNav({
           disabledDates={disabledDates}
           showRainOnly={showRainOnly}
           onToggleRainOnly={onToggleRainOnly ?? (() => {})}
+          mode={calendarMode}
         />
       )}
     </>

@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation as useRouterLocation } from 'react-router-dom'
-import { ChevronLeft, CalendarDays, List, ArrowUpDown } from 'lucide-react'
+import { ChevronLeft, CalendarDays, List } from 'lucide-react'
 import { getLocationBySlug } from '@/data/locations'
 import { useRainfallData } from '@/hooks/useRainfallData'
 import { DateNav } from '@/components/DateNav'
 import { StationRow } from '@/components/StationRow'
 import { ShareButton } from '@/components/ShareButton'
-import type { RainfallStatus } from '@/types/rainfall'
+import { SortButton } from '@/components/SortButton'
+import { LocationSortSheet, type LocationSortMode } from '@/components/LocationSortSheet'
 import {
   groupByDate,
   sumForLocation,
@@ -14,9 +15,11 @@ import {
   formatShortDate,
   formatMonth,
   getRainfallStatus,
+  getProgressPercent,
 } from '@/lib/rainfallUtils'
 
-function getCalendarFillColor(status: RainfallStatus): string {
+function getCalendarFillColor(mm: number): string {
+  const status = getRainfallStatus(mm)
   switch (status) {
     case 'yellow': return 'var(--mw-alert-yellow)'
     case 'orange': return 'var(--mw-alert-orange)'
@@ -63,6 +66,8 @@ export default function LocationPage() {
   const focusDate: Date | null = routerState?.date ? startOfDay(new Date(routerState.date)) : null
 
   const [view, setView] = useState<'list' | 'month'>('list')
+  const [sortMode, setSortMode] = useState<LocationSortMode>('date-desc')
+  const [sortSheetOpen, setSortSheetOpen] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(
     () => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1)
   )
@@ -103,16 +108,36 @@ export default function LocationPage() {
     row.date.getMonth() === selectedMonth.getMonth()
   )
 
-  const maxMm = Math.max(...allHistory.map(r => r.mm), 1)
-  const visibleHistory = allHistory.slice(0, visibleCount)
+  const MAX_MM = 130
+  const sortedHistory =
+    sortMode === 'high-to-low' ? [...allHistory].sort((a, b) => b.mm - a.mm)
+    : sortMode === 'low-to-high' ? [...allHistory].sort((a, b) => a.mm - b.mm)
+    : sortMode === 'date-asc' ? [...allHistory].sort((a, b) => a.date.getTime() - b.date.getTime())
+    : [...allHistory].sort((a, b) => b.date.getTime() - a.date.getTime())
+  const visibleHistory = sortedHistory.slice(0, visibleCount)
   const hasMore = visibleCount < allHistory.length
+
+  const SHADES = [
+    'var(--mw-fill-700)', 'var(--mw-fill-600)', 'var(--mw-fill-500)',
+    'var(--mw-fill-400)', 'var(--mw-fill-300)', 'var(--mw-fill-200)',
+    'var(--mw-fill-100)',
+  ]
+  const blueShadeMap = useMemo(() => {
+    const blues = allHistory
+      .filter(r => r.mm > 0 && r.mm <= 40)
+      .sort((a, b) => b.mm - a.mm)
+    const map = new Map<string, string>()
+    blues.forEach((r, i) =>
+      map.set(startOfDay(r.date).toISOString(), SHADES[Math.min(i, SHADES.length - 1)])
+    )
+    return map
+  }, [allHistory])
 
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const isCurrentMonth = selectedMonth >= currentMonthStart
 
   const rainyDaySet = new Set(allHistory.map(r => startOfDay(r.date).toISOString()))
   const dataByDate = new Map(allHistory.map(r => [startOfDay(r.date).toISOString(), r.mm]))
-  const calendarScaleMax = maxMm + 10
 
   function prevMonth() {
     setSelectedMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))
@@ -170,6 +195,11 @@ export default function LocationPage() {
               onPrev={prevMonth}
               onNext={nextMonth}
               disableNext={isCurrentMonth}
+              selectedDate={selectedMonth}
+              onDateSelect={(date) =>
+                setSelectedMonth(new Date(date.getFullYear(), date.getMonth(), 1))
+              }
+              calendarMode="month"
             />
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -187,25 +217,9 @@ export default function LocationPage() {
             </button>
 
             {/* Sort — active in list, disabled in month */}
-            <button
-              className="flex items-center justify-center h-[42px] rounded-lg"
-              style={{
-                background: '#f9fcfd',
-                border: `1px solid ${view === 'list' ? 'var(--mw-progress-fill)' : 'var(--mw-text-muted)'}`,
-                paddingLeft: 12,
-                paddingRight: 12,
-                opacity: view === 'month' ? 0.5 : 1,
-                pointerEvents: view === 'month' ? 'none' : 'auto',
-              }}
-              disabled={view === 'month'}
-              aria-label="Sort"
-              aria-disabled={view === 'month'}
-            >
-              <ArrowUpDown
-                size={24}
-                style={{ color: view === 'list' ? 'var(--mw-progress-fill)' : 'var(--mw-text-muted)' }}
-              />
-            </button>
+            <div style={{ opacity: view === 'month' ? 0.5 : 1, pointerEvents: view === 'month' ? 'none' : 'auto' }}>
+              <SortButton onClick={() => setSortSheetOpen(true)} />
+            </div>
           </div>
         </div>
 
@@ -227,7 +241,8 @@ export default function LocationPage() {
                       ref={isFocused ? focusRef : undefined}
                       label={formatShortDate(row.date)}
                       rainfallMm={row.mm}
-                      maxMm={maxMm}
+                      maxMm={MAX_MM}
+                      blueShade={blueShadeMap.get(iso)}
                     />
                   )
                 })
@@ -291,8 +306,8 @@ export default function LocationPage() {
                         const iso = startOfDay(day).toISOString()
                         const mm = dataByDate.get(iso) ?? 0
                         const hasData = rainyDaySet.has(iso)
-                        const fillWidthPct = hasData ? (mm / calendarScaleMax * 100) : 0
-                        const fillColor = getCalendarFillColor(getRainfallStatus(mm))
+                        const fillWidthPct = hasData ? getProgressPercent(mm, MAX_MM) : 0
+                        const fillColor = getCalendarFillColor(mm)
                         const tipOpen = activeTip === iso
                         return (
                           <div
@@ -349,6 +364,13 @@ export default function LocationPage() {
         )}
 
       </div>
+
+      <LocationSortSheet
+        open={sortSheetOpen}
+        onClose={() => setSortSheetOpen(false)}
+        value={sortMode}
+        onSelect={(mode) => { setSortMode(mode); setSortSheetOpen(false) }}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Droplets } from 'lucide-react'
 import { useRainfallData } from '@/hooks/useRainfallData'
@@ -49,14 +49,32 @@ export default function Home() {
   const { data: records = [], isLoading, isError } = useRainfallData()
 
   const [tab, setTab] = useState<'day' | 'week'>('day')
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('mazha_home_selectedDate')
+      return saved ? new Date(saved) : null
+    } catch { return null }
+  })
   const [showRainOnly, setShowRainOnly] = useState(false)
   const [sortMode, setSortMode] = useState<SortMode>('high-to-low')
   const [sortSheetOpen, setSortSheetOpen] = useState(false)
 
-  const today = startOfDay(new Date())
-  const mostRecent = records.length > 0 ? getMostRecentDate(records) : today
+  const [today] = useState(() => startOfDay(new Date()))
+  const mostRecent = useMemo(
+    () => records.length > 0 ? getMostRecentDate(records) : today,
+    [records, today]
+  )
   const displayDate = selectedDate ?? mostRecent
+
+  useEffect(() => {
+    try {
+      if (selectedDate) {
+        sessionStorage.setItem('mazha_home_selectedDate', selectedDate.toISOString())
+      } else {
+        sessionStorage.removeItem('mazha_home_selectedDate')
+      }
+    } catch {}
+  }, [selectedDate])
 
   const rainyDates = useMemo(() => getRainyDates(records), [records])
 
