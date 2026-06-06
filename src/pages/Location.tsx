@@ -73,9 +73,11 @@ export default function LocationPage() {
   )
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
+  const [contentVisible, setContentVisible] = useState(true)
   const cardRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const heroRef = useRef<HTMLDivElement>(null)
+  const switchingToSlugRef = useRef<string | null>(null)
 
   // Save tab context for back-navigation restoration in Home
   useEffect(() => {
@@ -108,6 +110,23 @@ export default function LocationPage() {
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (!switchingToSlugRef.current) return
+    switchingToSlugRef.current = null
+
+    const now = startOfDay(new Date())
+    setSelectedDate(now)
+    setVisibleDate(now)
+    setSelectedMonth(new Date(now.getFullYear(), now.getMonth(), 1))
+    setIsWeekMode(false)
+    setCardPhase('idle')
+    setShowStickyHeader(false)
+    window.scrollTo(0, 0)
+
+    setContentVisible(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug])
 
   if (!location) {
     return (
@@ -211,10 +230,19 @@ export default function LocationPage() {
 
   function handleLocationSwitch(newSlug: string) {
     setLocationSwitcherOpen(false)
-    navigate(`/location/${newSlug}`, {
-      replace: true,
-      state: { date: selectedDate.toISOString() },
-    })
+    if (newSlug === slug) return
+    switchingToSlugRef.current = newSlug
+    setContentVisible(false)
+  }
+
+  function handleContentFadeEnd(e: React.TransitionEvent<HTMLDivElement>) {
+    if (e.propertyName !== 'opacity') return
+    if (!contentVisible && switchingToSlugRef.current) {
+      navigate(`/location/${switchingToSlugRef.current}`, {
+        replace: true,
+        state: { date: selectedDate.toISOString() },
+      })
+    }
   }
 
   const calendarDays = getDaysInMonth(selectedMonth.getFullYear(), selectedMonth.getMonth())
@@ -270,7 +298,15 @@ export default function LocationPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-7 px-5">
+      <div
+        className="flex flex-col gap-7 px-5"
+        style={{
+          opacity: contentVisible ? 1 : 0,
+          transition: 'opacity 200ms ease',
+          pointerEvents: contentVisible ? 'auto' : 'none',
+        }}
+        onTransitionEnd={handleContentFadeEnd}
+      >
 
         {/* Location Hero */}
         <div ref={heroRef} className="flex flex-col gap-2">
