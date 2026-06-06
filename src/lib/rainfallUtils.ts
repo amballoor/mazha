@@ -113,6 +113,13 @@ export function endOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999)
 }
 
+// Returns all dates present in dataset (including zero-rainfall days)
+export function getAllDataDates(records: RainfallRecord[]): Set<string> {
+  const s = new Set<string>()
+  for (const r of records) s.add(startOfDay(r.timestamp).toISOString())
+  return s
+}
+
 // Returns most recent date present in dataset, or today if empty
 export function getMostRecentDate(records: RainfallRecord[]): Date {
   if (records.length === 0) return startOfDay(new Date())

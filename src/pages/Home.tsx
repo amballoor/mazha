@@ -16,10 +16,13 @@ import {
   filterByDateRange,
   getMonthClampedCalendarWeek,
   getMostRecentDate,
+  getAllDataDates,
   startOfDay,
   formatDay,
   formatWeekRange,
 } from '@/lib/rainfallUtils'
+
+const MIN_DATE = new Date(2025, 9, 8) // Oct 8, 2025 — earliest date with data
 
 function getRainyDates(records: RainfallRecord[]): Set<string> {
   const s = new Set<string>()
@@ -56,7 +59,10 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
     try {
       const saved = sessionStorage.getItem('mazha_home_selectedDate')
-      return saved ? new Date(saved) : null
+      if (!saved) return null
+      const d = new Date(saved)
+      if (d < MIN_DATE) return null
+      return d
     } catch { return null }
   })
   const [showRainOnly, setShowRainOnly] = useState(false)
@@ -85,6 +91,7 @@ export default function Home() {
   }, [selectedDate])
 
   const rainyDates = useMemo(() => getRainyDates(records), [records])
+  const dataDates = useMemo(() => getAllDataDates(records), [records])
 
   function prevDay() {
     setSelectedDate((d) => {
@@ -107,7 +114,7 @@ export default function Home() {
   function nextWeek() {
     const { end } = getMonthClampedCalendarWeek(displayDate)
     const next = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1)
-    if (next > today) return
+    if (next > mostRecent) return
     setSelectedDate(next)
   }
 
@@ -128,7 +135,7 @@ export default function Home() {
       for (let i = 0; i < 365; i++) {
         c = new Date(c)
         c.setDate(c.getDate() + 1)
-        if (c > today) return d ?? displayDate
+        if (c > mostRecent) return d ?? displayDate
         if (rainyDates.has(startOfDay(c).toISOString())) return c
       }
       return d ?? displayDate
@@ -142,12 +149,12 @@ export default function Home() {
       ? formatDay(displayDate)
       : formatWeekRange(weekStart, weekEnd)
 
-  const isNextDisabled = tab === 'week' ? weekEnd >= today : displayDate >= today
+  const isNextDisabled = tab === 'week' ? weekEnd >= mostRecent : displayDate >= mostRecent
 
   const hasPrevRainyDay = showRainOnly
     ? [...rainyDates].some(d => new Date(d) < displayDate)
     : true
-  const isPrevDisabled = showRainOnly && !hasPrevRainyDay
+  const isPrevDisabled = startOfDay(displayDate) <= MIN_DATE || (showRainOnly && !hasPrevRainyDay)
 
   const locationValues = LOCATIONS.map((loc) => {
     let mm = 0
@@ -219,10 +226,11 @@ export default function Home() {
                 disablePrev={isPrevDisabled}
                 selectedDate={displayDate}
                 onDateSelect={setSelectedDate}
-                maxDate={today}
+                maxDate={mostRecent}
+                minDate={MIN_DATE}
                 disabledDates={showRainOnly
                   ? (date) => !rainyDates.has(startOfDay(date).toISOString())
-                  : undefined}
+                  : (date) => !dataDates.has(startOfDay(date).toISOString())}
                 showRainOnly={showRainOnly}
                 onToggleRainOnly={() => setShowRainOnly((v) => !v)}
               />

@@ -30,7 +30,6 @@ function TablerChevron({ direction, size = 42, style }: {
   )
 }
 
-const MIN_YEAR = 2020
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -42,6 +41,7 @@ type CalendarSheetProps = {
   selectedDate?: Date
   onDateSelect: (date: Date) => void
   maxDate?: Date
+  minDate?: Date
   disabledDates?: (date: Date) => boolean
   showRainOnly?: boolean
   onToggleRainOnly?: () => void
@@ -54,6 +54,7 @@ export function CalendarSheet({
   selectedDate,
   onDateSelect,
   maxDate,
+  minDate,
   disabledDates,
   showRainOnly = false,
   onToggleRainOnly,
@@ -77,10 +78,18 @@ export function CalendarSheet({
   useScrollLock(open)
 
   const effectiveMaxDate = maxDate ?? today
+  const minYear = minDate?.getFullYear() ?? 2020
 
-  const isFutureMonth = (year: number, monthIdx: number) =>
-    year > today.getFullYear() ||
-    (year === today.getFullYear() && monthIdx > today.getMonth())
+  const isOutOfRangeMonth = (year: number, monthIdx: number) => {
+    const tooLate =
+      year > effectiveMaxDate.getFullYear() ||
+      (year === effectiveMaxDate.getFullYear() && monthIdx > effectiveMaxDate.getMonth())
+    const tooEarly = minDate && (
+      year < minDate.getFullYear() ||
+      (year === minDate.getFullYear() && monthIdx < minDate.getMonth())
+    )
+    return tooLate || !!tooEarly
+  }
 
   return createPortal(
     <div
@@ -128,6 +137,7 @@ export function CalendarSheet({
                 }}
                 disabled={(date) =>
                   (maxDate ? date > maxDate : false) ||
+                  (minDate ? date < minDate : false) ||
                   (disabledDates ? disabledDates(date) : false)
                 }
                 className="[--cell-size:56px] p-4"
@@ -173,9 +183,9 @@ export function CalendarSheet({
                 <button
                   className="size-[42px] flex items-center justify-center bg-transparent border-0"
                   onClick={() => setViewYear(y => y - 1)}
-                  disabled={viewYear <= MIN_YEAR}
+                  disabled={viewYear <= minYear}
                   aria-label="Previous year"
-                  style={{ color: 'var(--mw-progress-fill)', opacity: viewYear <= MIN_YEAR ? 0.4 : 1 }}
+                  style={{ color: 'var(--mw-progress-fill)', opacity: viewYear <= minYear ? 0.4 : 1 }}
                 >
                   <TablerChevron direction="left" size={42} />
                 </button>
@@ -202,7 +212,7 @@ export function CalendarSheet({
               {/* 4-column month grid */}
               <div className="grid grid-cols-4 gap-2">
                 {MONTH_SHORT.map((name, idx) => {
-                  const disabled = isFutureMonth(viewYear, idx)
+                  const disabled = isOutOfRangeMonth(viewYear, idx)
                   const isSelected =
                     selectedDate &&
                     selectedDate.getFullYear() === viewYear &&
@@ -250,8 +260,8 @@ export function CalendarSheet({
               {/* 3-column year grid, newest first */}
               <div className="grid grid-cols-3 gap-2 overflow-y-auto max-h-[290px]">
                 {Array.from(
-                  { length: today.getFullYear() - MIN_YEAR + 1 },
-                  (_, i) => today.getFullYear() - i
+                  { length: effectiveMaxDate.getFullYear() - minYear + 1 },
+                  (_, i) => effectiveMaxDate.getFullYear() - i
                 ).map((year) => {
                   const isSelected = selectedDate?.getFullYear() === year
                   return (

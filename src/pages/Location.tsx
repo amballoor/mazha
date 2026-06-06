@@ -72,6 +72,7 @@ export default function LocationPage() {
     routerState?.weekEnd ? new Date(routerState.weekEnd) : null
   )
   const [showStickyHeader, setShowStickyHeader] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const heroRef = useRef<HTMLDivElement>(null)
@@ -204,6 +205,10 @@ export default function LocationPage() {
     observer.observe(cardRef.current)
   }
 
+  function handleBack() {
+    setIsExiting(true)
+  }
+
   function handleLocationSwitch(newSlug: string) {
     setLocationSwitcherOpen(false)
     navigate(`/location/${newSlug}`, {
@@ -221,13 +226,23 @@ export default function LocationPage() {
   }))
 
   return (
-    <div className="min-h-screen overflow-x-hidden pb-8" style={{ background: 'var(--color-background, white)' }}>
+    <div
+      className="min-h-screen overflow-x-hidden pb-8"
+      style={{
+        background: 'var(--color-background, white)',
+        animation: isExiting
+          ? 'slide-out-to-right 280ms ease-in forwards'
+          : 'slide-in-from-right 280ms ease-out forwards',
+        willChange: 'transform',
+      }}
+      onAnimationEnd={() => { if (isExiting) navigate(-1) }}
+    >
 
       {/* Top nav */}
       <div className="flex items-center justify-between px-5 pt-6 pb-4">
         <button
           className="flex items-center gap-2 min-h-[48px]"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           aria-label="Back"
         >
           <ChevronLeft size={18} style={{ color: 'var(--mw-text-primary)' }} />

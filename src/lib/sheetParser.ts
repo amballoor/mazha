@@ -16,31 +16,21 @@ const SHEET_NAME_MAP: Record<string, string> = {
   'ERATTAMAVU': 'Erattamavu',
 }
 
-const MONTH_MAP: Record<string, number> = {
-  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
-}
-
-// Parses "Aug-08" → Date, assigning the most recent past occurrence of that month+day
+// Parses "8/8/2025" (M/D/YYYY) → Date
 function parseDateStr(dateStr: string): Date | null {
-  const match = dateStr.trim().match(/^([A-Za-z]{3})-(\d{2})$/)
+  const match = dateStr.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
   if (!match) return null
-  const month = MONTH_MAP[match[1]]
-  const day = parseInt(match[2], 10)
-  if (month === undefined || isNaN(day)) return null
-
-  const now = new Date()
-  let year = now.getFullYear()
-  const candidate = new Date(year, month, day)
-  // If this date is in the future, use last year
-  if (candidate > now) year -= 1
+  const month = parseInt(match[1], 10) - 1 // JS months are 0-indexed
+  const day   = parseInt(match[2], 10)
+  const year  = parseInt(match[3], 10)
+  if (isNaN(month) || isNaN(day) || isNaN(year)) return null
   return new Date(year, month, day)
 }
 
 // Sheet format (wide/pivot):
 //   Row 0: grid codes — skip
 //   Row 1: DAY/Locations, AMBALLOR KAVU, MAXWELL, ...
-//   Row 2+: Aug-08, 34.5, 16, 18, ...
+//   Row 2+: 8/8/2025, 34.5, 16, 18, ...
 export function parseSheetCsv(csv: string): RainfallRecord[] {
   const rows = csv
     .trim()
@@ -54,13 +44,15 @@ export function parseSheetCsv(csv: string): RainfallRecord[] {
 
   const records: RainfallRecord[] = []
   for (let i = 2; i < rows.length; i++) {
-    const [dateStr, ...values] = rows[i]
+    const [dateStr, ...rawValues] = rows[i]
     if (!dateStr) continue
+    // Skip rows where every location value is blank (pre-filled future dates)
+    if (rawValues.every(v => v === '')) continue
     const timestamp = parseDateStr(dateStr)
     if (!timestamp) continue
 
     locationNames.forEach((location, idx) => {
-      const rainfallMm = parseFloat(values[idx] ?? '0')
+      const rainfallMm = parseFloat(rawValues[idx] ?? '0')
       if (!location) return
       records.push({ timestamp, location, rainfallMm: isNaN(rainfallMm) ? 0 : rainfallMm })
     })

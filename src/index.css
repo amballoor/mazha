@@ -143,6 +143,7 @@
     }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
     }
   html {
     @apply font-sans;
@@ -156,4 +157,12 @@
 @keyframes card-fade-in {
   from { opacity: 0; filter: blur(6px); }
   to   { opacity: 1; filter: blur(0px); }
+}
+@keyframes slide-in-from-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes slide-out-to-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
 }

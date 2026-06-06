@@ -11,6 +11,7 @@ type DateNavProps = {
   selectedDate?: Date
   onDateSelect?: (date: Date) => void
   maxDate?: Date
+  minDate?: Date
   disabledDates?: (date: Date) => boolean
   showRainOnly?: boolean
   onToggleRainOnly?: () => void
@@ -26,6 +27,7 @@ export function DateNav({
   selectedDate,
   onDateSelect,
   maxDate,
+  minDate,
   disabledDates,
   showRainOnly = false,
   onToggleRainOnly,
@@ -84,6 +86,7 @@ export function DateNav({
           selectedDate={selectedDate}
           onDateSelect={onDateSelect}
           maxDate={maxDate}
+          minDate={minDate}
           disabledDates={disabledDates}
           showRainOnly={showRainOnly}
           onToggleRainOnly={onToggleRainOnly ?? (() => {})}
