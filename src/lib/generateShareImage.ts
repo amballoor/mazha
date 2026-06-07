@@ -1,10 +1,31 @@
+import { getRainfallStatus } from '@/lib/rainfallUtils'
+
 const FONT = '"Geist Variable", system-ui, sans-serif'
 
-function getBarColor(mm: number): string {
-  if (mm === 0) return '#d4d4d4'
-  if (mm < 15.6) return '#71b6db'
-  if (mm < 64.5) return '#4aa2d1'
-  return '#e82c2c'
+const B = '#4aa2d1'
+const Y = '#ffc107'
+const O = '#ff6d00'
+const R = '#df1f1f'
+
+function getBarFill(
+  ctx: CanvasRenderingContext2D,
+  mm: number,
+  barX: number,
+  fillW: number,
+): string | CanvasGradient {
+  const status = getRainfallStatus(mm)
+  if (status === 'none' || status === 'blue') return B
+
+  const grad = ctx.createLinearGradient(barX, 0, barX + fillW, 0)
+  if (status === 'yellow') {
+    grad.addColorStop(0, B); grad.addColorStop(1, Y)
+  } else if (status === 'orange') {
+    grad.addColorStop(0, B); grad.addColorStop(0.5, Y); grad.addColorStop(1, O)
+  } else {
+    grad.addColorStop(0, B); grad.addColorStop(0.33, Y)
+    grad.addColorStop(0.67, O); grad.addColorStop(1, R)
+  }
+  return grad
 }
 
 function formatShareDate(date: Date): string {
@@ -103,7 +124,6 @@ export async function generateShareImage(
     const barY = rowY + (ROW_H - BAR_H) / 2
     const midY = barY + BAR_H / 2
 
-    const barColor = getBarColor(entry.rainfallMm)
     const fillW = entry.rainfallMm === 0
       ? 0
       : Math.max(8, Math.round((entry.rainfallMm / maxMm) * BAR_AREA))
@@ -123,7 +143,7 @@ export async function generateShareImage(
     // Fill bar
     if (fillW > 0) {
       roundRect(ctx, BAR_X, barY, fillW, BAR_H, 6)
-      ctx.fillStyle = barColor
+      ctx.fillStyle = getBarFill(ctx, entry.rainfallMm, BAR_X, fillW)
       ctx.fill()
     }
 
