@@ -5,7 +5,6 @@ import { getLocationBySlug } from '@/data/locations'
 import { useRainfallData } from '@/hooks/useRainfallData'
 import { DateNav } from '@/components/DateNav'
 import { StationRow } from '@/components/StationRow'
-import { ShareButton } from '@/components/ShareButton'
 import { SortButton } from '@/components/SortButton'
 import { LocationSortSheet, type LocationSortMode } from '@/components/LocationSortSheet'
 import { LocationSwitcherSheet } from '@/components/LocationSwitcherSheet'
@@ -248,11 +247,6 @@ export default function LocationPage() {
   const calendarDays = getDaysInMonth(selectedMonth.getFullYear(), selectedMonth.getMonth())
   const firstDayOffset = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1).getDay()
 
-  const shareEntries = allHistory.map(r => ({
-    location: formatShortDate(r.date),
-    rainfallMm: r.mm,
-  }))
-
   return (
     <div
       className="min-h-screen overflow-x-hidden pb-8"
@@ -403,39 +397,34 @@ export default function LocationPage() {
 
         {/* ── LIST VIEW ── */}
         {view === 'list' && (
-          <>
-            <ul className="flex flex-col gap-2">
-              {allHistory.length === 0 ? (
-                <li className="text-[16px] py-4" style={{ color: 'var(--mw-text-muted)' }}>
-                  No data for this month.
-                </li>
-              ) : (
-                sortedHistory.map(row => {
-                  const iso = startOfDay(row.date).toISOString()
-                  const isSelected = selectedDate.toISOString() === iso
-                  return (
-                    <StationRow
-                      key={iso}
-                      label={formatShortDate(row.date)}
-                      rainfallMm={row.mm}
-                      maxMm={MAX_MM}
-                      blueShade={blueShadeMap.get(iso)}
-                      highlighted={isSelected}
-                      onClick={() => handleDateRowClick(row.date)}
-                    />
-                  )
-                })
-              )}
-            </ul>
-
-            <ShareButton entries={shareEntries} date={selectedMonth} />
-          </>
+          <ul className="flex flex-col gap-2">
+            {allHistory.length === 0 ? (
+              <li className="text-[16px] py-4" style={{ color: 'var(--mw-text-muted)' }}>
+                No data for this month.
+              </li>
+            ) : (
+              sortedHistory.map(row => {
+                const iso = startOfDay(row.date).toISOString()
+                const isSelected = selectedDate.toISOString() === iso
+                return (
+                  <StationRow
+                    key={iso}
+                    label={formatShortDate(row.date)}
+                    rainfallMm={row.mm}
+                    maxMm={MAX_MM}
+                    blueShade={blueShadeMap.get(iso)}
+                    highlighted={isSelected}
+                    onClick={() => handleDateRowClick(row.date)}
+                  />
+                )
+              })
+            )}
+          </ul>
         )}
 
         {/* ── MONTH VIEW ── */}
         {view === 'month' && (
-          <>
-            <div className="overflow-x-clip">
+          <div className="overflow-x-clip">
               <div
                 className="rounded-lg flex flex-col gap-3"
                 style={{ background: 'var(--mw-surface)', padding: 10 }}
@@ -511,9 +500,6 @@ export default function LocationPage() {
                 })()}
               </div>
             </div>
-
-            <ShareButton entries={shareEntries} date={selectedMonth} />
-          </>
         )}
 
       </div>
