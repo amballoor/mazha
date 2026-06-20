@@ -24,7 +24,7 @@ function parseDateStr(dateStr: string): Date | null {
   const day   = parseInt(match[2], 10)
   const year  = parseInt(match[3], 10)
   if (isNaN(month) || isNaN(day) || isNaN(year)) return null
-  return new Date(year, month, day)
+  return new Date(year, month, day - 1)
 }
 
 // Sheet format (wide/pivot):

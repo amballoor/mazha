@@ -160,6 +160,16 @@ Timestamp | Location | Rainfall_mm
 ```
 Update `src/lib/sheetParser.ts` and `src/types/rainfall.ts` once confirmed.
 
+### Date Mapping (important invariant)
+
+The Google Sheet logs each 24-hour reading under the **next calendar day**.
+- Sheet row dated `June 18` → represents rainfall that fell on **June 17**
+  (measurement period: June 17, 08:00 AM → June 18, 08:00 AM)
+
+`parseDateStr` in `src/lib/sheetParser.ts` compensates by subtracting 1 day from
+every parsed date (`new Date(year, month, day - 1)`). **Never remove this offset** —
+all downstream filtering, display, and aggregation logic depends on it.
+
 ### Fetch Pattern
 - Publish Google Sheet as CSV (File → Share → Publish to web → CSV)
 - Store the URL in `VITE_SHEET_CSV_URL` environment variable
