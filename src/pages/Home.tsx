@@ -20,6 +20,7 @@ import {
   startOfDay,
   formatDay,
   formatWeekRange,
+  formatShortDate,
 } from '@/lib/rainfallUtils'
 
 const MIN_DATE = new Date(2025, 9, 8) // Oct 8, 2025 — earliest date with data
@@ -268,21 +269,32 @@ export default function Home() {
                   />
                 ))}
           </ul>
-
-          {tab === 'day' && (
-            <ShareButton
-              entries={locationValues.map(({ loc, mm }) => ({
-                location: loc.name,
-                rainfallMm: mm,
-              }))}
-              date={displayDate}
-            />
-          )}
-
-          <div className="flex justify-center mt-16 mb-4">
-            <Droplets size={40} style={{ color: 'var(--mw-progress-fill)' }} />
-          </div>
         </div>
+      </div>
+
+      {tab === 'day' && (
+        <p
+          className="mt-7 text-center text-[16px] font-normal leading-none whitespace-nowrap"
+          style={{ color: 'var(--mw-text-muted)' }}
+        >
+          24 hrs from {formatShortDate(displayDate)}, 8 AM
+        </p>
+      )}
+
+      {tab === 'day' && (
+        <div className="mt-7">
+          <ShareButton
+            entries={locationValues.map(({ loc, mm }) => ({
+              location: loc.name,
+              rainfallMm: mm,
+            }))}
+            date={displayDate}
+          />
+        </div>
+      )}
+
+      <div className="flex justify-center mt-16 mb-4">
+        <Droplets size={40} style={{ color: 'var(--mw-progress-fill)' }} />
       </div>
 
       <SortSheet

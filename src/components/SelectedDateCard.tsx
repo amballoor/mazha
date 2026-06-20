@@ -1,7 +1,8 @@
 import type { CSSProperties, Ref } from 'react'
-import { CloudRainWind, BarChartHorizontal, Sun } from 'lucide-react'
+import { CloudRainWind, BarChartHorizontal, Sun, Info } from 'lucide-react'
 import type { RainfallStatus } from '@/types/rainfall'
-import { formatDay, formatWeekRange } from '@/lib/rainfallUtils'
+import { formatDay, formatWeekRange, formatShortDate } from '@/lib/rainfallUtils'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 // spacing: xs=4px gap-1, md=12px gap-3, 3xl=28px gap-7, 2xl=24px p-6
 // SVG embedded directly without encodeURIComponent — %23 is already pre-encoded for #
@@ -68,17 +69,43 @@ export function SelectedDateCard({
     : formatDay(date)
 
   // Mazha/Label/Stat: Geist Medium 18px lh=100%
-  const datePill = (
-    <div
-      className="inline-flex items-center justify-center self-start px-2 py-1 rounded-[4px]"
-      style={{ background: 'var(--mw-fill-100)' }}
-    >
-      <span
-        className="text-[18px] font-medium leading-none whitespace-nowrap"
-        style={{ color: 'var(--mw-text-primary)' }}
+  // self-start lives on the wrapper so it doesn't break items-center alignment inside the flex row
+  const datePillWithInfo = (
+    <div className="flex items-center gap-2 self-start">
+      <div
+        className="inline-flex items-center justify-center px-2 py-1 rounded-[4px]"
+        style={{ background: 'var(--mw-fill-100)' }}
       >
-        {dateLabel}
-      </span>
+        <span
+          className="text-[18px] font-medium leading-none whitespace-nowrap"
+          style={{ color: 'var(--mw-text-primary)' }}
+        >
+          {dateLabel}
+        </span>
+      </div>
+      {!weekMode && (
+        <Popover>
+          <PopoverTrigger
+            className="flex items-center justify-center min-h-[44px] min-w-[44px]"
+            aria-label="Show measurement period"
+          >
+            <Info size={24} style={{ color: 'var(--mw-text-muted)' }} />
+          </PopoverTrigger>
+          <PopoverContent
+            className="w-auto px-4 py-3"
+            side="bottom"
+            align="start"
+            sideOffset={4}
+          >
+            <p
+              className="text-[16px] font-normal leading-none whitespace-nowrap"
+              style={{ color: 'var(--mw-text-muted)' }}
+            >
+              24 hrs from {formatShortDate(date)}, 8 AM
+            </p>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   )
 
@@ -107,7 +134,7 @@ export function SelectedDateCard({
             >
               Selected Date
             </span>
-            {datePill}
+            {datePillWithInfo}
           </div>
 
           {isAlert && alertColor && (
@@ -137,7 +164,7 @@ export function SelectedDateCard({
           >
             Selected Date
           </span>
-          {datePill}
+          {datePillWithInfo}
         </div>
       )}
 
